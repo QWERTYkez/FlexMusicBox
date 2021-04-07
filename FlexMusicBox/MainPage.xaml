@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="FlexMusicBox.MainPage"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <ContentPage.Resources>
+        <Style TargetType="Label">
+            <Setter Property="TextColor" Value="White" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid BackgroundColor="#202021">
+        <Grid
+            x:Name="VkontacteAuthGRD"
+            HorizontalOptions="Center"
+            IsVisible="False"
+            VerticalOptions="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition Height="70" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Label
+                Margin="20"
+                FontAttributes="Bold"
+                FontSize="40"
+                HorizontalOptions="Center"
+                Text="Регистрация" />
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="5" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="300" />
+                </Grid.ColumnDefinitions>
+                <Label
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    FontSize="20"
+                    Text="Логин:"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    FontSize="20"
+                    Text="Пароль:"
+                    VerticalOptions="Center" />
+                <Frame
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Padding="3">
+                    <Entry x:Name="VkLogin" />
+                </Frame>
+                <Frame
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Padding="3">
+                    <Entry x:Name="VkPass" IsPassword="True" />
+                </Frame>
+            </Grid>
+            <Label
+                x:Name="VkAuthInfo"
+                Grid.Row="2"
+                FontSize="20"
+                HorizontalOptions="Center"
+                VerticalOptions="End" />
+            <Button
+                Grid.Row="3"
+                Margin="30"
+                Pressed="VkAuthPressed"
+                Text="Войти" />
+        </Grid>
+        <Grid x:Name="PlayerGRD" IsVisible="False">
+            <Label
+                x:Name="xLab"
+                FontSize="50"
+                Text="ZZZZZZZZZZZZ"
+                TextColor="White" />
+        </Grid>
+    </Grid>
+
+</ContentPage>
