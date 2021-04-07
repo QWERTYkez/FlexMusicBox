@@ -1,29 +1,84 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VkNet;
 using VkNet.AudioBypassService.Exceptions;
 using VkNet.AudioBypassService.Extensions;
 using VkNet.Model;
-using Xamarin.Essentials;
 using Xamarin.Forms;
-using Newtonsoft.Json;
 
 namespace FlexMusicBox
 {
     public partial class MainPage : ContentPage
     {
         VkApi _vk;
-        private IDictionary<string, object> Prop { get => App.Current.Properties; }
-        private Task SaveProps() => App.Current.SavePropertiesAsync();
+        private Task SaveProp(string Name, string Prop)
+        {
+            App.Current.Properties[Name] = Prop;
+            return App.Current.SavePropertiesAsync();
+        }
+        private Task SaveProp<T>(string Name, T Prop) where T: class
+        {
+            App.Current.Properties[Name] = JsonConvert.SerializeObject(Prop);
+            return App.Current.SavePropertiesAsync();
+        }
+        private Task SaveProps(Dictionary<string, object> Props)
+        {
+            foreach (var x in Props)
+            {
+                if (x.Value is string) App.Current.Properties[x.Key] = x.Value;
+                else
+                {
+                    var T = x.Value.GetType();
+                    if (T.IsClass)
+                        App.Current.Properties[x.Key] =
+                            JsonConvert.SerializeObject(Convert.ChangeType(x.Value, T));
+                    else throw new Exception("Неправильное использование App.Current.Properties");
+                }
+            }
+            return App.Current.SavePropertiesAsync();
+        }
+        private bool GetProp(string Name, out string Prop)
+        {
+            if (App.Current.Properties.TryGetValue(Name, out object o))
+            {
+                Prop = o as string;
+                return true;
+            }
+            else
+            {
+                Prop = null;
+                return false;
+            }
+        }
+        private bool GetProp<T>(string Name, out T Prop) where T : class
+        {
+            if (App.Current.Properties.TryGetValue(Name, out object o))
+            {
+                Prop = JsonConvert.DeserializeObject<T>(o as string);
+                return true;
+            }
+            else
+            {
+                Prop = null;
+                return false;
+            }
+        }
 
         public MainPage()
         {
             InitializeComponent();
 
-            this.Appearing += (s, e) => Task.Run(() =>
+            this.Appearing += FirstAppearing;
+        }
+
+        private void FirstAppearing(object sender, EventArgs e)
+        {
+            this.Appearing -= FirstAppearing;
+
+            Task.Run(() =>
             {
                 var services = new ServiceCollection();
                 services.AddAudioBypass();
@@ -31,14 +86,13 @@ namespace FlexMusicBox
                 _vk.OnTokenExpires += s =>
                 {
                     _vk.RefreshToken();
-                    Prop["VkToken"] = _vk.Token;
-                    SaveProps();
+                    SaveProp("VkToken", _vk.Token);
                 };
+                _vk.OnTokenUpdatedAutomatically += s => SaveProp("VkToken", _vk.Token);
 
                 ApiAuthParams Ap = null;
-                if (Prop.TryGetValue("VkUserAuth", out object o))
+                if (GetProp("VkUserAuth", out VkUserAuth UserAuth))
                 {
-                    var UserAuth = JsonConvert.DeserializeObject<VkUserAuth>(o as string);
                     Ap = UserAuth.ApiAuthParams;
 
                     Dispatcher.BeginInvokeOnMainThread(() =>
@@ -47,11 +101,11 @@ namespace FlexMusicBox
                         VkPass.Text = UserAuth.Pass;
                     });
                 }
-                if (Prop.TryGetValue("VkToken", out object Token))
+                if (GetProp("VkToken", out string token))
                 {
                     try
                     {
-                        _vk.Authorize(new ApiAuthParams { AccessToken = (string)Token });
+                        _vk.Authorize(new ApiAuthParams { AccessToken = token });
                         Dispatcher.BeginInvokeOnMainThread(() =>
                         {
                             VkontacteAuthGRD.IsVisible = false;
@@ -64,8 +118,7 @@ namespace FlexMusicBox
                         if (Ap != null)
                         {
                             _vk.Authorize(Ap);
-                            Prop["VkToken"] = _vk.Token;
-                            SaveProps();
+                            SaveProp("VkToken", _vk.Token);
                             Dispatcher.BeginInvokeOnMainThread(() =>
                             {
                                 VkontacteAuthGRD.IsVisible = false;
@@ -80,8 +133,7 @@ namespace FlexMusicBox
                     if (Ap != null)
                     {
                         _vk.Authorize(Ap);
-                        Prop["VkToken"] = _vk.Token;
-                        SaveProps();
+                        SaveProp("VkToken", _vk.Token);
                         Dispatcher.BeginInvokeOnMainThread(() =>
                         {
                             VkontacteAuthGRD.IsVisible = false;
@@ -97,6 +149,12 @@ namespace FlexMusicBox
             });
         }
 
+        private void GoToAuth(object sender, EventArgs e)
+        {
+            VkontacteAuthGRD.IsVisible = true;
+            PlayerGRD.IsVisible = false;
+        }
+
         private void VkAuthPressed(object sender, EventArgs e)
         {
             VkAuthInfo.Text = "Попытка входа...";
@@ -106,8 +164,8 @@ namespace FlexMusicBox
             {
                 try
                 {
-                    if (Prop.TryGetValue("VkToken", out object Token))
-                        _vk.Authorize(new ApiAuthParams { AccessToken = (string)Token });
+                    if(GetProp("VkToken", out string token))
+                        _vk.Authorize(new ApiAuthParams { AccessToken = token });
                     else
                     {
                         _vk.Authorize(new ApiAuthParams
@@ -126,9 +184,11 @@ namespace FlexMusicBox
                     return;
                 }
 
-                Prop["VkUserAuth"] = JsonConvert.SerializeObject(new VkUserAuth(Login, Pass));
-                Prop["VkToken"] = _vk.Token;
-                _ = SaveProps();
+                _ = SaveProps(new Dictionary<string, object>
+                {
+                    {"VkUserAuth", new VkUserAuth(Login, Pass) },
+                    {"VkToken", _vk.Token }
+                });
 
                 Dispatcher.BeginInvokeOnMainThread(() => VkAuthInfo.Text = "Авторизация пройдена");
 

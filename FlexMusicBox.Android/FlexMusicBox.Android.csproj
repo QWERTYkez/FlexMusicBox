@@ -37,6 +37,7 @@
     <EnableLLVM>false</EnableLLVM>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
+    <MandroidI18n />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -95,7 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FlexMusicBox\FlexMusicBox.csproj">
-      <Project>{B1A52EFE-E08A-47BB-9E38-EF8F100AE81C}</Project>
+      <Project>{72d6b4f4-7273-426d-9fd3-11835afc8bcc}</Project>
       <Name>FlexMusicBox</Name>
     </ProjectReference>
   </ItemGroup>

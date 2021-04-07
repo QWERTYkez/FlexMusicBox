@@ -81,6 +81,13 @@
                 FontSize="50"
                 Text="ZZZZZZZZZZZZ"
                 TextColor="White" />
+
+            <Button
+                Padding="20"
+                Clicked="GoToAuth"
+                HorizontalOptions="Center"
+                Text="Go To Auth"
+                VerticalOptions="Center" />
         </Grid>
     </Grid>
 
