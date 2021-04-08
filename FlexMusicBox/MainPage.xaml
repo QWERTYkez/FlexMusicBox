@@ -2,7 +2,8 @@
 <ContentPage
     x:Class="FlexMusicBox.MainPage"
     xmlns="http://xamarin.com/schemas/2014/forms"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:FlexMusicBox">
 
     <ContentPage.Resources>
         <Style TargetType="Label">
@@ -75,19 +76,81 @@
                 Pressed="VkAuthPressed"
                 Text="Войти" />
         </Grid>
-        <Grid x:Name="PlayerGRD" IsVisible="False">
-            <Label
-                x:Name="xLab"
-                FontSize="50"
-                Text="ZZZZZZZZZZZZ"
-                TextColor="White" />
 
-            <Button
-                Padding="20"
-                Clicked="GoToAuth"
-                HorizontalOptions="Center"
-                Text="Go To Auth"
-                VerticalOptions="Center" />
+        <Grid x:Name="PlayerGRD" IsVisible="False">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid
+                Margin="0,-45,0,45"
+                HorizontalOptions="FillAndExpand"
+                VerticalOptions="Fill">
+                <RelativeLayout
+                    Margin="0,45,0,0"
+                    Padding="0"
+                    BackgroundColor="#60000000"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="{Binding Path=Height, Source={x:Reference Name=AlbumsList}}">
+                    <ListView
+                        x:Name="AlbumsList"
+                        Margin="0,0"
+                        AnchorX="0"
+                        AnchorY="0"
+                        HorizontalOptions="Center"
+                        RelativeLayout.WidthConstraint="320"
+                        RelativeLayout.XConstraint="{ConstraintExpression Type=RelativeToParent,
+                                                                          Property=Width,
+                                                                          Factor=0}"
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent,
+                                                                          Property=Height,
+                                                                          Factor=1}"
+                        Rotation="270"
+                        RowHeight="320"
+                        SelectionMode="None"
+                        SeparatorVisibility="Default"
+                        VerticalOptions="Start"
+                        WidthRequest="320">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <ViewCell>
+                                    <ContentView
+                                        HorizontalOptions="CenterAndExpand"
+                                        Rotation="90"
+                                        VerticalOptions="CenterAndExpand">
+                                        <Grid
+                                            BackgroundColor="Black"
+                                            HeightRequest="300"
+                                            WidthRequest="300">
+                                            <Image
+                                                Aspect="AspectFill"
+                                                HorizontalOptions="CenterAndExpand"
+                                                Source="{Binding Photo.Photo600}"
+                                                VerticalOptions="CenterAndExpand" />
+                                            <Frame
+                                                Padding="5"
+                                                BackgroundColor="#B0000000"
+                                                HasShadow="True"
+                                                HorizontalOptions="Center"
+                                                VerticalOptions="Center">
+                                                <Label
+                                                    FontFamily="consolas.ttf#consolas"
+                                                    FontSize="Large"
+                                                    HorizontalOptions="Center"
+                                                    HorizontalTextAlignment="Center"
+                                                    LineBreakMode="WordWrap"
+                                                    Text="{Binding Title}"
+                                                    VerticalOptions="Center" />
+                                            </Frame>
+                                        </Grid>
+                                    </ContentView>
+                                </ViewCell>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </RelativeLayout>
+            </Grid>
         </Grid>
     </Grid>
 

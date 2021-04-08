@@ -1,13 +1,17 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VkNet;
 using VkNet.AudioBypassService.Exceptions;
 using VkNet.AudioBypassService.Extensions;
 using VkNet.Model;
+using VkNet.Model.RequestParams;
 using Xamarin.Forms;
+using VkNet.Model.Attachments;
+using System.Globalization;
 
 namespace FlexMusicBox
 {
@@ -105,12 +109,8 @@ namespace FlexMusicBox
                 {
                     try
                     {
-                        _vk.Authorize(new ApiAuthParams { AccessToken = token });
-                        Dispatcher.BeginInvokeOnMainThread(() =>
-                        {
-                            VkontacteAuthGRD.IsVisible = false;
-                            PlayerGRD.IsVisible = true;
-                        });
+                        _vk.Authorize(new ApiAuthParams { AccessToken = token, UserId = Ap.UserId });
+                        VkOpened();
                         return;
                     }
                     catch
@@ -119,11 +119,7 @@ namespace FlexMusicBox
                         {
                             _vk.Authorize(Ap);
                             SaveProp("VkToken", _vk.Token);
-                            Dispatcher.BeginInvokeOnMainThread(() =>
-                            {
-                                VkontacteAuthGRD.IsVisible = false;
-                                PlayerGRD.IsVisible = true;
-                            });
+                            VkOpened();
                             return;
                         }
                     }
@@ -134,11 +130,7 @@ namespace FlexMusicBox
                     {
                         _vk.Authorize(Ap);
                         SaveProp("VkToken", _vk.Token);
-                        Dispatcher.BeginInvokeOnMainThread(() =>
-                        {
-                            VkontacteAuthGRD.IsVisible = false;
-                            PlayerGRD.IsVisible = true;
-                        });
+                        VkOpened();
                         return;
                     }
                 }
@@ -164,16 +156,11 @@ namespace FlexMusicBox
             {
                 try
                 {
-                    if(GetProp("VkToken", out string token))
-                        _vk.Authorize(new ApiAuthParams { AccessToken = token });
-                    else
+                    _vk.Authorize(new ApiAuthParams
                     {
-                        _vk.Authorize(new ApiAuthParams
-                        {
-                            Login = Login,
-                            Password = Pass
-                        });
-                    }
+                        Login = Login,
+                        Password = Pass
+                    });
                 }
                 catch (VkAuthException ex)
                 {
@@ -186,36 +173,52 @@ namespace FlexMusicBox
 
                 _ = SaveProps(new Dictionary<string, object>
                 {
-                    {"VkUserAuth", new VkUserAuth(Login, Pass) },
+                    {"VkUserAuth", new VkUserAuth(Login, Pass, _vk.UserId.Value) },
                     {"VkToken", _vk.Token }
                 });
 
                 Dispatcher.BeginInvokeOnMainThread(() => VkAuthInfo.Text = "Авторизация пройдена");
 
                 await Task.Delay(1000);
-                Dispatcher.BeginInvokeOnMainThread(() =>
-                {
-                    VkontacteAuthGRD.IsVisible = false;
-                    PlayerGRD.IsVisible = true;
-                });
+                VkOpened();
             });
+        }
+
+        private void VkOpened()
+        {
+            Dispatcher.BeginInvokeOnMainThread(() =>
+            {
+                VkontacteAuthGRD.IsVisible = false;
+                PlayerGRD.IsVisible = true;
+            });
+            Task.Run(() => 
+            {
+                var Albums = _vk.Audio.GetPlaylists(_vk.UserId.Value);
+
+                Dispatcher.BeginInvokeOnMainThread(() =>
+                    AlbumsList.ItemsSource = Albums);
+
+                //var audios = _vk.Audio.Get(new AudioGetParams { OwnerId = _vk.UserId, PlaylistId = alb.Id });
+           });
         }
 
         [JsonObject(MemberSerialization.OptIn)]
         public class VkUserAuth
         {
             public VkUserAuth() { }
-            public VkUserAuth(string Login, string Pass)
+            public VkUserAuth(string Login, string Pass, long Id)
             {
-                this.Login = Login; this.Pass = Pass;
+                this.Login = Login; this.Pass = Pass; this.Id = Id;
             }
 
             [JsonProperty]
             public string Login { get; set; }
             [JsonProperty]
             public string Pass { get; set; }
+            [JsonProperty]
+            public long Id { get; set; }
 
-            public ApiAuthParams ApiAuthParams { get => new ApiAuthParams { Login = this.Login, Password = this.Pass }; }
+            public ApiAuthParams ApiAuthParams { get => new ApiAuthParams { Login = this.Login, Password = this.Pass, UserId = this.Id }; }
         }
     }
 }
