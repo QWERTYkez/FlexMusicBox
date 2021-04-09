@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="FlexMusicBox.MainPage"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:i="clr-namespace:Behaviors;assembly=Behaviors"
+    xmlns:local="clr-namespace:FlexMusicBox"
+    x:Name="MainElement">
+
+    <ContentPage.BindingContext>
+        <local:MainPageViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <Style TargetType="Label">
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="Large" />
+        </Style>
+        <local:DurationConverter x:Key="DurationConverter" />
+        <local:GridLengthConverter x:Key="GridLengthConverter" />
+        <local:AudioNameConverter x:Key="AudioNameConverter" />
+    </ContentPage.Resources>
+
+    <Grid BackgroundColor="#202021">
+        <Grid
+            x:Name="VkontacteAuthGRD"
+            HorizontalOptions="Center"
+            IsVisible="{Binding AuthGrdIsVisible}"
+            VerticalOptions="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition Height="70" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Label
+                Margin="20"
+                FontAttributes="Bold"
+                FontSize="40"
+                HorizontalOptions="Center"
+                Text="Регистрация" />
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="5" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="300" />
+                </Grid.ColumnDefinitions>
+                <Label
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    FontSize="20"
+                    Text="Логин:"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    FontSize="20"
+                    Text="Пароль:"
+                    VerticalOptions="Center" />
+                <Frame
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Padding="3">
+                    <Entry Text="{Binding VkLogin}" />
+                </Frame>
+                <Frame
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Padding="3">
+                    <Entry IsPassword="True" Text="{Binding VkPass}" />
+                </Frame>
+            </Grid>
+            <Label
+                Grid.Row="2"
+                FontSize="20"
+                HorizontalOptions="Center"
+                Text="{Binding VkAuthInfo}"
+                VerticalOptions="End" />
+            <Button
+                Grid.Row="3"
+                Margin="30"
+                Command="{Binding Cmd_VkAuth}"
+                Text="Войти" />
+        </Grid>
+
+        <Grid IsVisible="{Binding PlayerGrdIsVisible}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid Padding="0,5" BackgroundColor="#60000000">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Button
+                    Grid.Row="0"
+                    Margin="40,-5,40,0"
+                    Command="{Binding Cmd_VkShowAll}"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="Вся музыка" />
+                <Label
+                    Grid.Row="1"
+                    Margin="0,0,0,-5"
+                    Text="Плейлисты:"
+                    VerticalOptions="End" />
+                <RelativeLayout Grid.Row="2">
+                    <ListView
+                        ItemsSource="{Binding Playlists}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent,
+                                                                               Property=Height}"
+                        RowHeight="170"
+                        SelectedItem="{Binding SelectedPlaylist}"
+                        SeparatorVisibility="Default"
+                        VerticalOptions="StartAndExpand"
+                        WidthRequest="290">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <ViewCell>
+                                    <ContentView HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
+                                        <Grid HeightRequest="160" WidthRequest="270">
+                                            <Image
+                                                Aspect="AspectFill"
+                                                HorizontalOptions="CenterAndExpand"
+                                                Source="{Binding Photo.Photo600}"
+                                                VerticalOptions="CenterAndExpand" />
+                                            <Frame
+                                                Padding="5"
+                                                BackgroundColor="#B0000000"
+                                                HasShadow="True"
+                                                HorizontalOptions="Center"
+                                                VerticalOptions="Center">
+                                                <Label
+                                                    HorizontalOptions="Center"
+                                                    LineBreakMode="WordWrap"
+                                                    Text="{Binding Title}"
+                                                    VerticalOptions="Center" />
+                                            </Frame>
+                                        </Grid>
+                                    </ContentView>
+                                </ViewCell>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </RelativeLayout>
+            </Grid>
+
+            <ScrollView Grid.Column="1" Scrolled="ScrollView_Scrolled">
+                <Grid VerticalOptions="FillAndExpand">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="5" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" BackgroundColor="Gray" />
+                    <Grid Grid.Row="2" BackgroundColor="Gray" />
+                    <Grid Grid.Row="1" VerticalOptions="Center">
+                        <ListView
+                            HasUnevenRows="True"
+                            HeightRequest="{Binding AudiosListHeight}"
+                            ItemsSource="{Binding Audios}"
+                            SelectedItem="{Binding SelectedAudio}"
+                            VerticalOptions="FillAndExpand"
+                            VerticalScrollBarVisibility="Never">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <ViewCell>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <ScrollView
+                                                HorizontalOptions="Start"
+                                                HorizontalScrollBarVisibility="Never"
+                                                Orientation="Horizontal">
+                                                <Label
+                                                    Margin="10,0,0,0"
+                                                    HorizontalOptions="Start"
+                                                    HorizontalTextAlignment="Start"
+                                                    LineBreakMode="NoWrap"
+                                                    Text="{Binding ., Converter={StaticResource AudioNameConverter}}"
+                                                    VerticalOptions="Center" />
+                                            </ScrollView>
+                                            <Label
+                                                Grid.Column="1"
+                                                HorizontalOptions="Center"
+                                                Text="{Binding Duration, Converter={StaticResource DurationConverter}}" />
+                                            <Label
+                                                Grid.Column="2"
+                                                Padding="-10"
+                                                FontSize="44"
+                                                HeightRequest="48"
+                                                Text="▶"
+                                                WidthRequest="88" />
+                                        </Grid>
+                                    </ViewCell>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                    <Grid
+                        Grid.RowSpan="3"
+                        Margin="0,0,90,0"
+                        BackgroundColor="#00000000"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+                </Grid>
+            </ScrollView>
+        </Grid>
+    </Grid>
+
+</ContentPage>

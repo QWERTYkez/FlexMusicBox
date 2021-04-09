@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FlexMusicBox": {
+      "commandName": "Project",
+      "sqlDebugging": false,
+      "nativeDebugging": true,
+      "jsWebView2Debugging": false
+    }
+  }
+}
