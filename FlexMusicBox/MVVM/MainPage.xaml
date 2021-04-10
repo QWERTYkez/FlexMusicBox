@@ -3,7 +3,6 @@
     x:Class="FlexMusicBox.MainPage"
     xmlns="http://xamarin.com/schemas/2014/forms"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:i="clr-namespace:Behaviors;assembly=Behaviors"
     xmlns:local="clr-namespace:FlexMusicBox"
     x:Name="MainElement">
 
@@ -25,10 +24,13 @@
     </ContentPage.Resources>
 
     <Grid BackgroundColor="#202021">
+
+
+
+        <!--  VkAuthGrd  -->
         <Grid
-            x:Name="VkontacteAuthGRD"
             HorizontalOptions="Center"
-            IsVisible="{Binding AuthGrdIsVisible}"
+            IsVisible="{Binding VkAuthGrdIsVisible}"
             VerticalOptions="Center">
             <Grid.RowDefinitions>
                 <RowDefinition />
@@ -68,7 +70,7 @@
                     Grid.Row="0"
                     Grid.Column="1"
                     Padding="3">
-                    <Entry Text="{Binding VkLogin}" />
+                    <Entry Keyboard="Email" Text="{Binding VkLogin}" />
                 </Frame>
                 <Frame
                     Grid.Row="2"
@@ -90,7 +92,8 @@
                 Text="Войти" />
         </Grid>
 
-        <Grid IsVisible="{Binding PlayerGrdIsVisible}">
+        <!--  VkPlaylistGrd  -->
+        <Grid IsVisible="{Binding VkPlaylistGrdIsVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />

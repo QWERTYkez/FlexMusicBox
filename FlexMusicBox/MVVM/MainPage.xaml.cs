@@ -26,7 +26,7 @@ namespace FlexMusicBox
         }
 
         private void ScrollView_Scrolled(object sender, ScrolledEventArgs e) => 
-            VM.Scrolled(((ScrollView)sender).Height + e.ScrollY - 22);
+            _ = VM.Scrolled(((ScrollView)sender).Height + e.ScrollY - 22);
     }
 
     public class DurationConverter : IValueConverter

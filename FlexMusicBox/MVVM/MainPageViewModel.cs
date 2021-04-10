@@ -1,10 +1,7 @@
 ﻿using MediaManager;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using VkNet;
@@ -133,20 +130,15 @@ namespace FlexMusicBox
                         return;
                     }
                 }
-                AuthGrdIsVisible = true;
+                VkAuthGrdIsVisible = true;
             });
-        }
-        void GoToAuth()
-        {
-            AuthGrdIsVisible = true;
-            PlayerGrdIsVisible = false;
         }
         Task VkOpened()
         {
             return Task.Run(() => 
             {
-                AuthGrdIsVisible = false;
-                PlayerGrdIsVisible = true;
+                VkAuthGrdIsVisible = false;
+                VkPlaylistGrdIsVisible = true;
 
                 Playlists = new ObservableCollection<AudioPlaylist>(_vk.Audio.GetPlaylists(_vk.UserId.Value));
                 Audios = new ObservableCollection<Audio>(_vk.Audio.Get(new AudioGetParams
@@ -192,8 +184,8 @@ namespace FlexMusicBox
         public string VkPass { get; set; }
         public string VkAuthInfo { get; set; }
 
-        public bool AuthGrdIsVisible { get; set; } = false;
-        public bool PlayerGrdIsVisible { get; set; } = false;
+        public bool VkAuthGrdIsVisible { get; set; } = false;
+        public bool VkPlaylistGrdIsVisible { get; set; } = false;
         
         public ObservableCollection<AudioPlaylist> Playlists { get; set; }
         private Audio _sad;
@@ -233,7 +225,7 @@ namespace FlexMusicBox
             }
         }
         public double AudiosListHeight { get; set; }
-        public ObservableCollection<Audio> _auds;
+        private ObservableCollection<Audio> _auds;
         public ObservableCollection<Audio> Audios
         {
             get => _auds;
@@ -247,5 +239,8 @@ namespace FlexMusicBox
                 });
             }
         }
+
+
+
     }
 }
