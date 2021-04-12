@@ -5,11 +5,14 @@ namespace FlexMusicBox
 {
     public static class UserDataManager
     {
-        public static bool Get_VkToken(out string Token) => GetProp("VkToken", out Token);
+        public static bool Get_VkToken(out string obj) => GetProp("VkToken", out obj);
         public static string VkToken { set => SaveProp("VkToken", value); }
 
-        public static bool Get_VkUserAuth(out VkUserAuth Token) => GetProp("VkUserAuth", out Token);
+        public static bool Get_VkUserAuth(out VkUserAuth obj) => GetProp("VkUserAuth", out obj);
         public static VkUserAuth VkUserAuth { set => SaveProp("VkUserAuth", value); }
+
+        public static bool Get_VkPlayerPosition(out VkPlayerPosition obj) => GetProp("VkPlayerPosition", out obj);
+        public static VkPlayerPosition VkPlayerPosition { set => SaveProp("VkPlayerPosition", value); }
 
         public static void SaveProps(Props props)
         {
@@ -66,6 +69,12 @@ namespace FlexMusicBox
     {
         public string VkToken { get; set; } = null;
         public VkUserAuth VkUserAuth { get; set; } = null;
+    }
+
+    public class VkPlayerPosition
+    {
+        public long? PlaylistId { get; set; }
+        public int MusicIndex { get; set; }
     }
 
     [JsonObject(MemberSerialization.OptIn)]

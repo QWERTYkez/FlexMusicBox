@@ -18,6 +18,19 @@
             <Setter Property="HorizontalTextAlignment" Value="Center" />
             <Setter Property="FontSize" Value="Large" />
         </Style>
+        <Style x:Key="BTN" TargetType="Button">
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Disabled">
+                            <VisualState.Setters>
+                                <Setter Property="TextColor" Value="#69696969" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
         <local:DurationConverter x:Key="DurationConverter" />
         <local:GridLengthConverter x:Key="GridLengthConverter" />
         <local:AudioNameConverter x:Key="AudioNameConverter" />
@@ -27,7 +40,7 @@
 
 
 
-        <!--  VkAuthGrd  -->
+        <!--  1111111  VkAuthGrd  -->
         <Grid
             HorizontalOptions="Center"
             IsVisible="{Binding VkAuthGrdIsVisible}"
@@ -92,12 +105,16 @@
                 Text="Войти" />
         </Grid>
 
-        <!--  VkPlaylistGrd  -->
-        <Grid IsVisible="{Binding VkPlaylistGrdIsVisible}">
+
+        <!--  222222 VkPlaylistGrd  -->
+        <Grid x:Name="VkPlaylistGrd" IsVisible="{Binding VkPlaylistGrdIsVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+
+
+            <!--  колонка плейлистов  -->
             <Grid Padding="0,5" BackgroundColor="#60000000">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -122,7 +139,7 @@
                         RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent,
                                                                                Property=Height}"
                         RowHeight="170"
-                        SelectedItem="{Binding SelectedPlaylist}"
+                        SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
                         SeparatorVisibility="Default"
                         VerticalOptions="StartAndExpand"
                         WidthRequest="290">
@@ -134,7 +151,7 @@
                                             <Image
                                                 Aspect="AspectFill"
                                                 HorizontalOptions="CenterAndExpand"
-                                                Source="{Binding Photo.Photo600}"
+                                                Source="{Binding Photo}"
                                                 VerticalOptions="CenterAndExpand" />
                                             <Frame
                                                 Padding="5"
@@ -157,69 +174,224 @@
                 </RelativeLayout>
             </Grid>
 
-            <ScrollView Grid.Column="1" Scrolled="ScrollView_Scrolled">
-                <Grid VerticalOptions="FillAndExpand">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="5" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="5" />
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" BackgroundColor="Gray" />
-                    <Grid Grid.Row="2" BackgroundColor="Gray" />
-                    <Grid Grid.Row="1" VerticalOptions="Center">
-                        <ListView
-                            HasUnevenRows="True"
-                            HeightRequest="{Binding AudiosListHeight}"
-                            ItemsSource="{Binding Audios}"
-                            SelectedItem="{Binding SelectedAudio}"
-                            VerticalOptions="FillAndExpand"
-                            VerticalScrollBarVisibility="Never">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <ViewCell>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <ScrollView
-                                                HorizontalOptions="Start"
-                                                HorizontalScrollBarVisibility="Never"
-                                                Orientation="Horizontal">
-                                                <Label
-                                                    Margin="10,0,0,0"
-                                                    HorizontalOptions="Start"
-                                                    HorizontalTextAlignment="Start"
-                                                    LineBreakMode="NoWrap"
-                                                    Text="{Binding ., Converter={StaticResource AudioNameConverter}}"
-                                                    VerticalOptions="Center" />
-                                            </ScrollView>
-                                            <Label
-                                                Grid.Column="1"
-                                                HorizontalOptions="Center"
-                                                Text="{Binding Duration, Converter={StaticResource DurationConverter}}" />
-                                            <Label
-                                                Grid.Column="2"
-                                                Padding="-10"
-                                                FontSize="44"
-                                                HeightRequest="48"
-                                                Text="▶"
-                                                WidthRequest="88" />
-                                        </Grid>
-                                    </ViewCell>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </Grid>
-                    <Grid
-                        Grid.RowSpan="3"
-                        Margin="0,0,90,0"
-                        BackgroundColor="#00000000"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="150" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <!--  Колонка меню  -->
+                <Grid>
+                    <Button
+                        Padding="0,-40,0,0"
+                        Command="{Binding Cmd_ToPlayer}"
+                        FontSize="150"
+                        HorizontalOptions="End"
+                        Text="«▶»"
+                        WidthRequest="300" />
                 </Grid>
-            </ScrollView>
+
+                <!--  Колонка песен  -->
+                <ScrollView
+                    x:Name="MusicsScrollView"
+                    Grid.Row="1"
+                    Scrolled="ScrollView_Scrolled">
+                    <Grid VerticalOptions="FillAndExpand">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="5" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="5" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            BackgroundColor="Gray" />
+                        <Grid
+                            Grid.Row="2"
+                            Grid.ColumnSpan="2"
+                            BackgroundColor="Gray" />
+                        <Grid Grid.Row="1" VerticalOptions="Center">
+                            <ListView
+                                x:Name="MusicsListView"
+                                HasUnevenRows="True"
+                                HeightRequest="{Binding AudiosListHeight}"
+                                ItemsSource="{Binding VkAudios}"
+                                SelectedItem="{Binding VkSelectedAudio}"
+                                SeparatorVisibility="None"
+                                VerticalOptions="FillAndExpand"
+                                VerticalScrollBarVisibility="Never">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <ViewCell>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <ScrollView
+                                                    HorizontalOptions="Start"
+                                                    HorizontalScrollBarVisibility="Never"
+                                                    Orientation="Horizontal">
+                                                    <Label
+                                                        Margin="10,0,0,0"
+                                                        HorizontalOptions="Start"
+                                                        HorizontalTextAlignment="Start"
+                                                        LineBreakMode="NoWrap"
+                                                        Text="{Binding Name}"
+                                                        VerticalOptions="Center" />
+                                                </ScrollView>
+                                                <Label
+                                                    Grid.Column="1"
+                                                    HorizontalOptions="Center"
+                                                    Text="{Binding Duration}" />
+                                                <Label
+                                                    Grid.Column="2"
+                                                    Padding="-10,-10,-10,-4"
+                                                    FontSize="44"
+                                                    HeightRequest="48"
+                                                    Text="▶"
+                                                    VerticalOptions="Center"
+                                                    WidthRequest="88" />
+                                            </Grid>
+                                        </ViewCell>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                        <Grid
+                            Grid.RowSpan="3"
+                            Margin="0,0,90,0"
+                            BackgroundColor="#00000000"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+                    </Grid>
+                </ScrollView>
+            </Grid>
+        </Grid>
+
+
+
+
+        <!--  3333333  PlayerGrd            ❘❘ ▶  -->
+        <Grid BackgroundColor="#202021" IsVisible="{Binding PlayerGrdIsVisible}">
+
+            <Grid
+                HeightRequest="200"
+                HorizontalOptions="End"
+                VerticalOptions="Start"
+                WidthRequest="250">
+                <Button
+                    Padding="-50,-190,0,0"
+                    Background="#05000000"
+                    Command="{Binding Cmd_ToAudioList}"
+                    FontSize="350"
+                    Rotation="180"
+                    Text="↪"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </Grid>
+
+
+
+            <StackLayout
+                Margin="0,120"
+                HorizontalOptions="Center"
+                Orientation="Horizontal"
+                VerticalOptions="End">
+                <Button
+                    Padding="0,-330,0,-180"
+                    Background="#05000000"
+                    Command="{Binding Cmd_Previous}"
+                    FontSize="600"
+                    IsEnabled="{Binding PreviousButtonIsEnable}"
+                    Style="{StaticResource BTN}"
+                    Text="«"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+                <Button
+                    Margin="20,0"
+                    Padding="-40,-215,-50,-90"
+                    Background="#05000000"
+                    Command="{Binding Cmd_Play}"
+                    FontSize="550"
+                    HeightRequest="410"
+                    IsVisible="{Binding PlayButtonIsVisible}"
+                    Text="▶"
+                    TextColor="White"
+                    VerticalOptions="Center"
+                    WidthRequest="450" />
+                <Button
+                    Margin="20,0"
+                    Padding="-40,-150,-50,-90"
+                    Background="#05000000"
+                    Command="{Binding Cmd_Pause}"
+                    FontSize="350"
+                    HeightRequest="410"
+                    IsVisible="{Binding PauseButtonIsVisible}"
+                    Text="❙ ❙"
+                    TextColor="White"
+                    VerticalOptions="Center"
+                    WidthRequest="450" />
+                <Button
+                    Padding="0,-330,0,-180"
+                    Background="#05000000"
+                    Command="{Binding Cmd_Next}"
+                    FontSize="600"
+                    Rotation="180"
+                    Text="«"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </StackLayout>
+
+
+            <Grid Margin="240,30" VerticalOptions="End">
+                <Label
+                    HorizontalOptions="Start"
+                    Text="{Binding DurationLabelCurrent}"
+                    VerticalOptions="End" />
+                <Label
+                    x:Name="TrackSliderLabel"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center"
+                    VerticalOptions="End" />
+                <Label
+                    HorizontalOptions="End"
+                    Text="{Binding Source={x:Reference TrackSlider}, Path=Maximum, Converter={StaticResource DurationConverter}}"
+                    VerticalOptions="End" />
+            </Grid>
+            <Grid
+                x:Name="DurationGRD"
+                Margin="222,70"
+                BackgroundColor="Gray"
+                HeightRequest="5"
+                HorizontalOptions="Start"
+                VerticalOptions="End"
+                WidthRequest="1000">
+                <Grid
+                    BackgroundColor="Cyan"
+                    HorizontalOptions="Start"
+                    WidthRequest="{Binding DurationGRDBiffered}" />
+                <Grid
+                    BackgroundColor="Gold"
+                    HorizontalOptions="Start"
+                    WidthRequest="{Binding DurationGRDCurrent}" />
+                <Grid Padding="-16">
+                    <Slider
+                        x:Name="TrackSlider"
+                        HorizontalOptions="Fill"
+                        Maximum="{Binding DurationSliderMaximum}"
+                        MaximumTrackColor="#01000000"
+                        Minimum="0"
+                        MinimumTrackColor="#01000000"
+                        ThumbColor="Gold"
+                        VerticalOptions="Center"
+                        Value="{Binding DurationSliderCurrent}" />
+                </Grid>
+            </Grid>
         </Grid>
     </Grid>
 
