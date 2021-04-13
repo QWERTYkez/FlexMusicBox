@@ -280,7 +280,7 @@ namespace FlexMusicBox
             {
                 _sap = value;
                 VkAudios = null;
-                Task.Run(async () =>
+                Task.Run(() =>
                 {
                     VkAudios = new ObservableCollection<Music>(value._Get(0, MaxDispQuantity));
                     _skip = 0;
@@ -511,6 +511,7 @@ namespace FlexMusicBox
                 VM._MM.Play(this._GetUrl());
                 CurrentPlayingMusic = this;
             }
+            VM.Current.ShowPlayedMusic();
             VM.Current.PlayerAudsInfo = new ObservableCollection<Music>
             {
                 CurrentPlayingMusic.MusicIndex == 0
@@ -523,7 +524,11 @@ namespace FlexMusicBox
                 ? CurrentPlayingPlaylist.Musics[0]
                 : CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex + 1]
             };
-            SavePlayPositions();
+            DM.VkPlayerPosition = new VkPlayerPosition
+            {
+                PlaylistId = this.PlaylistId,
+                MusicIndex = this.MusicIndex
+            };
         }
         public void PlayNext(bool auto = false)
         {
@@ -579,18 +584,7 @@ namespace FlexMusicBox
             if (counter == 0)
             {
                 _ = VM._MM.Play(CurrentPlayingMusic._GetUrl());
-                DM.VkPlayerPosition = new VkPlayerPosition
-                {
-                    PlaylistId = CurrentPlayingMusic.PlaylistId,
-                    MusicIndex = CurrentPlayingMusic.MusicIndex
-                };
-            }
-        }
-
-        private static void SavePlayPositions()
-        {
-            if (CurrentPlayingMusic != null)
-            {
+                VM.Current.ShowPlayedMusic();
                 DM.VkPlayerPosition = new VkPlayerPosition
                 {
                     PlaylistId = CurrentPlayingMusic.PlaylistId,
