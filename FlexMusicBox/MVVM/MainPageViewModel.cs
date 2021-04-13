@@ -14,6 +14,7 @@ using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 using Xamarin.Forms;
 using DM = FlexMusicBox.UserDataManager;
+using VM = FlexMusicBox.MainPageViewModel;
 
 namespace FlexMusicBox
 {
@@ -21,6 +22,8 @@ namespace FlexMusicBox
     {
         const int MaxDispQuantity = 50;
         const int RowHeight = 48;
+
+        public static VM Current;
 
         public static MediaManager.IMediaManager _MM { get => MediaManager.CrossMediaManager.Current; }
 
@@ -52,6 +55,8 @@ namespace FlexMusicBox
         public Command Cmd_ToPlayer { get; set; }
         public MainPageViewModel()
         {
+            Current = this;
+
             Cmd_VkAuth = new Command(() =>
             {
                 Task.Run(async () =>
@@ -109,7 +114,9 @@ namespace FlexMusicBox
             _MM.BufferedChanged += _MM_BufferedChanged;
             _MM.PositionChanged += _MM_PositionChanged;
             _MM.StateChanged += _MM_StateChanged;
+            _MM.MediaItemFinished += (s, e) => Music.CurrentPlayingMusic?.PlayNext(true);
         }
+
         public Task FirstAppearing()
         {
             return Task.Run(() =>
@@ -295,6 +302,9 @@ namespace FlexMusicBox
                     AudiosListHeight = value.Count * RowHeight;
             }
         }
+
+        public ObservableCollection<Music> PlayerAudsInfo { get; set; }
+
         private Music _sad;
         private bool AutoAudSelect = false;
         public ListView MusicsListView;
@@ -359,18 +369,20 @@ namespace FlexMusicBox
         }
         private void _MM_BufferedChanged(object sender, MediaManager.Playback.BufferedChangedEventArgs e)
         {
-            DurationGRDBiffered = DurationGRDSize * (e.Buffered.TotalSeconds / _MM.Duration.TotalSeconds);
+            var Nval = DurationGRDSize * (e.Buffered.TotalSeconds / _MM.Duration.TotalSeconds);
+            DurationGRDBiffered = Nval == double.NaN ? 0 : Nval;
         }
         private void _MM_PositionChanged(object sender, MediaManager.Playback.PositionChangedEventArgs e)
         {
             DurationLabelCurrent = $"{e.Position:m\\:ss}";
-            DurationGRDCurrent = DurationGRDSize * (e.Position.TotalSeconds / _MM.Duration.TotalSeconds);
+            var Nval = DurationGRDSize * (e.Position.TotalSeconds / _MM.Duration.TotalSeconds);
+            DurationGRDCurrent = Nval == double.NaN ? 0 : Nval;
             if (!DurationSliderLock) DurationSliderCurrent = e.Position.TotalSeconds;
         }
         private void _MM_StateChanged(object sender, MediaManager.Playback.StateChangedEventArgs e)
         {
             if (e.State == MediaManager.Player.MediaPlayerState.Playing)
-                DurationSliderMaximum = _MM.Duration.TotalSeconds;
+                DurationSliderMaximum = _MM.Duration.TotalSeconds == 0 ? 0.00001 : _MM.Duration.TotalSeconds;
         }
 
         public bool DurationSliderLock = false;
@@ -394,18 +406,18 @@ namespace FlexMusicBox
                 this.Photo = pl.Photo.Photo600;
                 this.Title = pl.Title;
 
-                var audios = MainPageViewModel._vk.Audio.Get(new AudioGetParams
+                var audios = VM._vk.Audio.Get(new AudioGetParams
                 {
-                    OwnerId = MainPageViewModel._vk.UserId,
+                    OwnerId = VM._vk.UserId,
                     PlaylistId = this.Id,
                     Count = 6000
                 });
                 Musics = audios.Select(a => new Music(a, this.Id, audios.IndexOf(a))).ToList();
                 while (Musics.Count() < Count)
                 {
-                    audios = MainPageViewModel._vk.Audio.Get(new AudioGetParams
+                    audios = VM._vk.Audio.Get(new AudioGetParams
                     {
-                        OwnerId = MainPageViewModel._vk.UserId,
+                        OwnerId = VM._vk.UserId,
                         PlaylistId = this.Id,
                         Count = 6000
                     });
@@ -416,9 +428,9 @@ namespace FlexMusicBox
             {
                 this.Id = null;
 
-                var audios = MainPageViewModel._vk.Audio.Get(new AudioGetParams
+                var audios = VM._vk.Audio.Get(new AudioGetParams
                 {
-                    OwnerId = MainPageViewModel._vk.UserId,
+                    OwnerId = VM._vk.UserId,
                     PlaylistId = this.Id,
                     Count = 6000
                 });
@@ -426,9 +438,9 @@ namespace FlexMusicBox
                 int count = Musics.Count();
                 while (count == 6000)
                 {
-                    audios = MainPageViewModel._vk.Audio.Get(new AudioGetParams
+                    audios = VM._vk.Audio.Get(new AudioGetParams
                     {
-                        OwnerId = MainPageViewModel._vk.UserId,
+                        OwnerId = VM._vk.UserId,
                         PlaylistId = this.Id,
                         Count = 6000
                     });
@@ -474,7 +486,7 @@ namespace FlexMusicBox
         public Music(Audio a, long? PlaylistId, int MusicIndex)
         {
             this.Name = $"{a.Artist} - {a.Title}";
-            this.Duration = $"{new TimeSpan(a.Duration * 10000000):m\\:ss}";
+            this.Duration = $"{TimeSpan.FromSeconds(a.Duration):m\\:ss}";
 
             this.PlaylistId = PlaylistId;
             this.MusicIndex = MusicIndex;
@@ -482,11 +494,12 @@ namespace FlexMusicBox
 
         public string Name { get; private set; }
         public string Duration { get; private set; }
+
         public void Play()
         {
             if (CurrentPlayingMusic == null)
             {
-                MainPageViewModel._MM.Play(this._GetUrl());
+                VM._MM.Play(this._GetUrl());
                 CurrentPlayingMusic = this;
                 CurrentPlayingPlaylist = Playlist.AllPlaylists.Where(p => p.Id == this.PlaylistId).First();
             }
@@ -494,12 +507,25 @@ namespace FlexMusicBox
             {
                 if (CurrentPlayingPlaylist.Id != CurrentPlayingMusic.PlaylistId)
                     CurrentPlayingPlaylist = Playlist.AllPlaylists.Where(p => p.Id == this.PlaylistId).First();
-                MainPageViewModel._MM.Play(this._GetUrl());
+
+                VM._MM.Play(this._GetUrl());
                 CurrentPlayingMusic = this;
             }
+            VM.Current.PlayerAudsInfo = new ObservableCollection<Music>
+            {
+                CurrentPlayingMusic.MusicIndex == 0
+                ? CurrentPlayingPlaylist.Musics.Last()
+                : CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex - 1],
+
+                CurrentPlayingMusic,
+
+                CurrentPlayingPlaylist.Musics.Last() == CurrentPlayingMusic
+                ? CurrentPlayingPlaylist.Musics[0]
+                : CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex + 1]
+            };
             SavePlayPositions();
         }
-        public void PlayNext()
+        public void PlayNext(bool auto = false)
         {
             if (CurrentPlayingPlaylist.Musics.Last() == CurrentPlayingMusic)
             {
@@ -509,8 +535,21 @@ namespace FlexMusicBox
             {
                 CurrentPlayingMusic = CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex + 1];
             }
-            MainPageViewModel._MM.Play(CurrentPlayingMusic._GetUrl());
-            SavePlayPositions();
+            VM.Current.PlayerAudsInfo.Add(CurrentPlayingPlaylist.Musics.Last() == CurrentPlayingMusic
+                ? CurrentPlayingPlaylist.Musics[0]
+                : CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex + 1]);
+            VM.Current.PlayerAudsInfo.RemoveAt(0);
+
+            if (auto)
+            {
+                VM._MM.Play(CurrentPlayingMusic._GetUrl());
+                DM.VkPlayerPosition = new VkPlayerPosition
+                {
+                    PlaylistId = CurrentPlayingMusic.PlaylistId,
+                    MusicIndex = CurrentPlayingMusic.MusicIndex
+                };
+            }
+            else PlayNewFile();
         }
         public void PlayPrevious()
         {
@@ -522,9 +561,32 @@ namespace FlexMusicBox
             {
                 CurrentPlayingMusic = CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex - 1];
             }
-            MainPageViewModel._MM.Play(CurrentPlayingMusic._GetUrl());
-            SavePlayPositions();
+            VM.Current.PlayerAudsInfo.Insert(0, CurrentPlayingMusic.MusicIndex == 0
+                ? CurrentPlayingPlaylist.Musics.Last()
+                : CurrentPlayingPlaylist.Musics[CurrentPlayingMusic.MusicIndex - 1]);
+            VM.Current.PlayerAudsInfo.RemoveAt(3);
+
+            PlayNewFile();
         }
+
+        private static int counter = 0;
+        private const int delay = 1000;
+        private async void PlayNewFile()
+        {
+            counter += 1;
+            await Task.Delay(delay);
+            counter -= 1;
+            if (counter == 0)
+            {
+                _ = VM._MM.Play(CurrentPlayingMusic._GetUrl());
+                DM.VkPlayerPosition = new VkPlayerPosition
+                {
+                    PlaylistId = CurrentPlayingMusic.PlaylistId,
+                    MusicIndex = CurrentPlayingMusic.MusicIndex
+                };
+            }
+        }
+
         private static void SavePlayPositions()
         {
             if (CurrentPlayingMusic != null)
@@ -544,9 +606,9 @@ namespace FlexMusicBox
         int MusicIndex;
         public string _GetUrl()
         {
-            return MainPageViewModel._vk.Audio.Get(new AudioGetParams
+            return VM._vk.Audio.Get(new AudioGetParams
             {
-                OwnerId = MainPageViewModel._vk.UserId,
+                OwnerId = VM._vk.UserId,
                 PlaylistId = this.PlaylistId,
                 Offset = this.MusicIndex,
                 Count = 1

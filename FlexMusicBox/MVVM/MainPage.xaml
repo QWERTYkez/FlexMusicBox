@@ -4,6 +4,7 @@
     xmlns="http://xamarin.com/schemas/2014/forms"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:FlexMusicBox"
+    xmlns:lst="clr-namespace:System.Collections.Generic;assembly=mscorlib"
     x:Name="MainElement">
 
     <ContentPage.BindingContext>
@@ -17,6 +18,9 @@
             <Setter Property="VerticalTextAlignment" Value="Center" />
             <Setter Property="HorizontalTextAlignment" Value="Center" />
             <Setter Property="FontSize" Value="Large" />
+        </Style>
+        <Style TargetType="BoxView">
+            <Setter Property="Background" Value="#50000000" />
         </Style>
         <Style x:Key="BTN" TargetType="Button">
             <Setter Property="VisualStateManager.VisualStateGroups">
@@ -107,7 +111,7 @@
 
 
         <!--  222222 VkPlaylistGrd  -->
-        <Grid x:Name="VkPlaylistGrd" IsVisible="{Binding VkPlaylistGrdIsVisible}">
+        <Grid IsVisible="{Binding VkPlaylistGrdIsVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -278,6 +282,74 @@
 
         <!--  3333333  PlayerGrd            ❘❘ ▶  -->
         <Grid BackgroundColor="#202021" IsVisible="{Binding PlayerGrdIsVisible}">
+            <Image Aspect="AspectFill" Source="Background.jpg" />
+
+            <Grid
+                Margin="10"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                WidthRequest="950">
+                <BoxView
+                    CornerRadius="40"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill" />
+                <Frame
+                    Margin="15,20"
+                    Padding="0"
+                    BackgroundColor="Transparent"
+                    BorderColor="Magenta"
+                    CornerRadius="10"
+                    HeightRequest="44"
+                    VerticalOptions="Center">
+                    <Frame
+                        Margin="1"
+                        Padding="0"
+                        BackgroundColor="Transparent"
+                        BorderColor="Magenta"
+                        CornerRadius="10"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+                </Frame>
+                <ListView
+                    Margin="20"
+                    HeightRequest="133"
+                    ItemsSource="{Binding PlayerAudsInfo}"
+                    SeparatorVisibility="None"
+                    VerticalOptions="Start">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ViewCell>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ScrollView
+                                        HorizontalOptions="Start"
+                                        HorizontalScrollBarVisibility="Never"
+                                        Orientation="Horizontal">
+                                        <Label
+                                            Margin="10,0,0,0"
+                                            HorizontalOptions="Start"
+                                            HorizontalTextAlignment="Start"
+                                            LineBreakMode="NoWrap"
+                                            Text="{Binding Name}"
+                                            VerticalOptions="Center" />
+                                    </ScrollView>
+                                    <Label
+                                        Grid.Column="1"
+                                        HorizontalOptions="Center"
+                                        Text="{Binding Duration}" />
+                                </Grid>
+                            </ViewCell>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <Grid BackgroundColor="#01000000" />
+            </Grid>
+
+
 
             <Grid
                 HeightRequest="200"
@@ -286,7 +358,7 @@
                 WidthRequest="250">
                 <Button
                     Padding="-50,-190,0,0"
-                    Background="#05000000"
+                    BackgroundColor="#05000000"
                     Command="{Binding Cmd_ToAudioList}"
                     FontSize="350"
                     Rotation="180"
@@ -296,11 +368,18 @@
             </Grid>
 
 
-
+            <BoxView
+                Margin="200,115"
+                CornerRadius="100"
+                HeightRequest="320"
+                HorizontalOptions="Fill"
+                VerticalOptions="End" />
             <StackLayout
-                Margin="0,120"
+                Margin="0,70"
                 HorizontalOptions="Center"
                 Orientation="Horizontal"
+                ScaleX="0.8"
+                ScaleY="0.8"
                 VerticalOptions="End">
                 <Button
                     Padding="0,-330,0,-180"
@@ -347,28 +426,57 @@
                     VerticalOptions="Center" />
             </StackLayout>
 
+            <!--  {Binding DurationLabelCurrent}  -->
+            <Grid Margin="240,23" VerticalOptions="End">
 
-            <Grid Margin="240,30" VerticalOptions="End">
-                <Label
-                    HorizontalOptions="Start"
-                    Text="{Binding DurationLabelCurrent}"
-                    VerticalOptions="End" />
-                <Label
-                    x:Name="TrackSliderLabel"
+                <Grid HorizontalOptions="Start" VerticalOptions="End">
+                    <BoxView
+                        Margin="-7,-2"
+                        CornerRadius="40"
+                        HeightRequest="30"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                    <Label HorizontalTextAlignment="Center" Text="{Binding DurationLabelCurrent}" />
+                </Grid>
+
+                <Grid
+                    x:Name="TrackSliderGrd"
                     HorizontalOptions="Center"
-                    HorizontalTextAlignment="Center"
-                    VerticalOptions="End" />
-                <Label
-                    HorizontalOptions="End"
-                    Text="{Binding Source={x:Reference TrackSlider}, Path=Maximum, Converter={StaticResource DurationConverter}}"
-                    VerticalOptions="End" />
+                    IsVisible="false"
+                    VerticalOptions="End">
+                    <BoxView
+                        Margin="-7,-2"
+                        CornerRadius="40"
+                        HeightRequest="30"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                    <Label x:Name="TrackSliderLabel" HorizontalTextAlignment="Center" />
+                </Grid>
+
+                <Grid HorizontalOptions="End" VerticalOptions="End">
+                    <BoxView
+                        Margin="-7,-2"
+                        CornerRadius="40"
+                        HeightRequest="30"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                    <Label HorizontalTextAlignment="Center" Text="{Binding Source={x:Reference TrackSlider}, Path=Maximum, Converter={StaticResource DurationConverter}}" />
+                </Grid>
+            </Grid>
+            <Grid
+                Margin="0,55"
+                HeightRequest="35"
+                HorizontalOptions="Center"
+                VerticalOptions="End"
+                WidthRequest="870">
+                <BoxView BackgroundColor="#50000000" CornerRadius="50" />
             </Grid>
             <Grid
                 x:Name="DurationGRD"
                 Margin="222,70"
                 BackgroundColor="Gray"
                 HeightRequest="5"
-                HorizontalOptions="Start"
+                HorizontalOptions="Center"
                 VerticalOptions="End"
                 WidthRequest="1000">
                 <Grid

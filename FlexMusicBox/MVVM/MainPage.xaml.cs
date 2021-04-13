@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using VkNet.Model.Attachments;
 using Xamarin.Forms;
@@ -24,23 +25,24 @@ namespace FlexMusicBox
             {
                 VM.DurationSliderLock = true;
                 this.TrackSlider.ValueChanged += TrackSlider_ValueChanged;
+                TrackSliderGrd.IsVisible = true;
             };
             this.TrackSlider.DragCompleted += (s, e) =>
             {
                 this.TrackSlider.ValueChanged -= TrackSlider_ValueChanged;
-                TrackSliderLabel.Text = "";
+                TrackSliderGrd.IsVisible = false;
                 MainPageViewModel._MM.SeekTo(new TimeSpan(Convert.ToInt32(TrackSlider.Value) * 10000000));
                 VM.DurationSliderLock = false;
             };
             this.DurationGRD.SizeChanged += (s, e) => VM.DurationGRDSize = this.DurationGRD.Width;
-            this.VkPlaylistGrd.SizeChanged += (s, e) => VM.VkPlaylistGrdHeight = this.VkPlaylistGrd.Height - 22;
+            this.MusicsScrollView.SizeChanged += (s, e) => VM.VkPlaylistGrdHeight = this.MusicsScrollView.Height - 22;
 
             VM.Scrolled += async dY => await MusicsScrollView.ScrollToAsync(0, MusicsScrollView.ScrollY + dY, false);
         }
 
         private void TrackSlider_ValueChanged(object sender, ValueChangedEventArgs e)
         {
-            TrackSliderLabel.Text = $"{new TimeSpan(Convert.ToInt32(e.NewValue) * 10000000):m\\:ss}";
+            TrackSliderLabel.Text = $"{TimeSpan.FromSeconds(e.NewValue):m\\:ss}";
         }
 
         void FirstAppearing(object sender, EventArgs e)
@@ -57,11 +59,11 @@ namespace FlexMusicBox
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return $"{new TimeSpan(System.Convert.ToInt32(value) * 10000000):m\\:ss}";
+            return $"{TimeSpan.FromSeconds((double)value):m\\:ss}";
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return System.Convert.ToInt32(((TimeSpan)value).TotalSeconds);
+            return ((TimeSpan)value).TotalSeconds;
         }
     }
     public class GridLengthConverter : IValueConverter
