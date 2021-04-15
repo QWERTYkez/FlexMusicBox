@@ -1,14 +1,24 @@
-﻿using MediaManager;
+﻿using Android.Media;
+using Android.Net;
+using FlexMusicBox.Player;
+using MediaManager;
 using MediaManager.Library;
 using MediaManager.Media;
 using Microsoft.Extensions.DependencyInjection;
+using OneWay.M3U;
+using PlaylistsNET.Content;
+using PlaylistsNET.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using VkNet;
@@ -32,7 +42,7 @@ namespace FlexMusicBox
 
         public static VM Current;
 
-        public static MediaManager.IMediaManager _MM { get => MediaManager.CrossMediaManager.Current; }
+        public static IMediaManager _MM { get => CrossMediaManager.Current; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
@@ -169,6 +179,42 @@ namespace FlexMusicBox
 
         public Task FirstAppearing()
         {
+            //var zz = "https://archive.org/download/testmp3testfile/mpthreetest.mp3";
+
+            //return Task.Run(() =>
+            //{
+            //    var mp = MediaPlayer.Create(Android.App.Application.Context, Android.Net.Uri.Parse(zz));
+
+            //    mp.Start();
+            //});
+
+
+
+
+
+
+            //return null;
+
+            
+
+            //var player = new MediaPlayer();
+
+            //player.BufferingUpdate += (s, e) =>
+            //{
+            //    Debug.WriteLine($" BufferingUpdate {e.Percent}");
+            //};
+
+            //player.SetDataSource(Android.App.Application.Context, Android.Net.Uri.Parse(zz));
+
+            //player.Start();
+
+            //return null;
+
+
+
+
+
+
             return Task.Run(() =>
             {
                 _vk.OnTokenExpires += s =>
@@ -219,30 +265,99 @@ namespace FlexMusicBox
         }
         void VkOpened()
         {
-            VkAuthGrdIsVisible = false;
-            VkPlaylistGrdIsVisible = true;
-            Playlists = new ObservableCollection<Playlist>(_vk.Audio.GetPlaylists(_vk.UserId.Value).Select(p => new Playlist(p)));
-            DefaultPlaylist = new Playlist();
-            SelectedPlaylist = DefaultPlaylist;
+            Task.Run(() => 
+            {
+                VkAuthGrdIsVisible = false;
+                VkPlaylistGrdIsVisible = true;
 
-            RestorePlaying();
+                //Playlists = new ObservableCollection<Playlist>(_vk.Audio.GetPlaylists(_vk.UserId.Value).Select(p => new Playlist(p)));
+                //DefaultPlaylist = new Playlist();
+                //SelectedPlaylist = DefaultPlaylist;
+
+                RestorePlaying();
+            });
         }
         void RestorePlaying()
         {
             if (DM.Get_VkPlayerPosition(out var pp))
             {
-                var pls = Playlist.AllPlaylists.Where(p => p.Id == pp.PlaylistId).ToList();
-                if (pls.Count > 0)
+                var xx = VM._vk.Audio.Get(new AudioGetParams
                 {
-                    var msics = pls.First().Musics;
-                    if (msics.Count > pp.MusicIndex)
+                    OwnerId = VM._vk.UserId,
+                    PlaylistId = pp.PlaylistId,
+                    Offset = pp.MusicIndex,
+                    Count = 1
+                }).First().Url;
+
+
+                var zz = xx.ToString();
+
+                var fmp = new FlexMusicPlayer();
+
+                fmp.Play(xx);
+
+
+                //////////////////////////////////////////////////////////
+
+                //var pls = Playlist.AllPlaylists.Where(p => p.Id == pp.PlaylistId).ToList();
+                //if (pls.Count > 0)
+                //{
+                //    var msics = pls.First().Musics;
+                //    if (msics.Count > pp.MusicIndex)
+                //    {
+                //        msics[pp.MusicIndex].Play();
+                //        PlayerGrdIsVisible = true;
+                //    }
+                //}
+            }
+        }
+
+
+        static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
+        {
+            // Check arguments.
+            if (cipherText == null || cipherText.Length <= 0)
+                throw new ArgumentNullException("cipherText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("IV");
+
+            // Declare the string used to hold
+            // the decrypted text.
+            string plaintext = null;
+
+            // Create an Aes object
+            // with the specified key and IV.
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Key;
+                aesAlg.IV = IV;
+
+                // Create a decryptor to perform the stream transform.
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                // Create the streams used for decryption.
+                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                     {
-                        msics[pp.MusicIndex].Play();
-                        PlayerGrdIsVisible = true;
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+
+                            // Read the decrypted bytes from the decrypting stream
+                            // and place them in a string.
+                            plaintext = srDecrypt.ReadToEnd();
+                        }
                     }
                 }
             }
+
+            return plaintext;
         }
+
+
+
 
         bool Scroll = false;
         public double VkPlaylistGrdHeight;
@@ -397,7 +512,10 @@ namespace FlexMusicBox
                     DurationSliderCurrent = 0;
                     DurationSliderMaximum = 0.00001;
 
-                    val.Play();
+
+
+
+                    
 
                     PlayButtonIsVisible = false;
                     PauseButtonIsVisible = true;
@@ -549,6 +667,7 @@ namespace FlexMusicBox
         {
             this._artist = a.Artist;
             this._title = a.Title;
+            this._uri = a.Url;
 
             this._duration = TimeSpan.FromSeconds(a.Duration);
 
@@ -556,6 +675,7 @@ namespace FlexMusicBox
             this.MusicIndex = MusicIndex;
         }
 
+        public System.Uri _uri;
         public string Name { get => $"{this.Artist} - {this.Title}"; }
 
         long? PlaylistId;

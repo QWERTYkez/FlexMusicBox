@@ -1,9 +1,12 @@
 ﻿using Android.App;
 using Android.Content.PM;
+using Android.Media;
+using Android.Net;
 using Android.OS;
 using Android.Runtime;
 using Android.Util;
 using MediaManager;
+using System.Threading.Tasks;
 
 namespace FlexMusicBox.Droid
 {
@@ -14,7 +17,10 @@ namespace FlexMusicBox.Droid
         {
             base.OnCreate(savedInstanceState);
 
-            CrossMediaManager.Current.Init(this);
+            //var CMM = new CrossMediaManager222();
+            //CMM.Current.Init(this);
+            
+            //MediaManager.CrossMediaManager.Current.Init(this);
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);

@@ -99,7 +99,6 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\icon.png" />
     <AndroidResource Include="Resources\mipmap-xxxhdpi\launcher_foreground.png" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\FlexMusicBox\FlexMusicBox.csproj">
       <Project>{72d6b4f4-7273-426d-9fd3-11835afc8bcc}</Project>
