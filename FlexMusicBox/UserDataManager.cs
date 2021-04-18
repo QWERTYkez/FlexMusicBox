@@ -75,6 +75,7 @@ namespace FlexMusicBox
     {
         public long? PlaylistId { get; set; }
         public int MusicIndex { get; set; }
+        public bool Shuffle { get; set; }
     }
 
     [JsonObject(MemberSerialization.OptIn)]

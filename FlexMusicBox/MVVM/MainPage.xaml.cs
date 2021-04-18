@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 using VkNet.Model.Attachments;
 using Xamarin.Forms;
@@ -31,7 +30,7 @@ namespace FlexMusicBox
             {
                 this.TrackSlider.ValueChanged -= TrackSlider_ValueChanged;
                 TrackSliderGrd.IsVisible = false;
-                MainPageViewModel._MM.SeekTo(new TimeSpan(Convert.ToInt32(TrackSlider.Value) * 10000000));
+                MainPageViewModel._MP.SeekTo((int)TrackSlider.Value * 1000);
                 VM.DurationSliderLock = false;
             };
             this.DurationGRD.SizeChanged += (s, e) => VM.DurationGRDSize = this.DurationGRD.Width;
@@ -94,6 +93,21 @@ namespace FlexMusicBox
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new Exception();
+        }
+    }
+    public class BoolToBrushConverter : IValueConverter
+    {
+        private static Brush On = new SolidColorBrush(Color.FromHex("#50FFFFFF"));
+            private static Brush Off = new SolidColorBrush(Color.FromHex("#50000000"));
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if ((bool)value) return On;
+            else return Off;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return false;
         }
     }
 }

@@ -1,47 +1,103 @@
 ﻿using Android.Media;
-using Plugin.SimpleAudioPlayer;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using Android.Net;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using static Android.Media.MediaPlayer;
-using System.Threading;
 
 namespace FlexMusicBox.Player
 {
     public class FlexMusicPlayer
     {
+        private MediaPlayer _player;
         public FlexMusicPlayer()
         {
-            
-        }
-
-        public void Play(System.Uri uri)
-        {
-
-            var zz = uri.ToString();
-
-            var player = new MediaPlayer();
-            player.BufferingUpdate += (s, e) =>
+            _player = new MediaPlayer();
+            _player.BufferingUpdate += (s, e) => CurrentBuffered = e.Percent;
+            _player.Prepared += (s, e) => 
             {
-                //Debug.WriteLine($" BufferingUpdate {e.Percent}");
+                FileDuration = _player.Duration;
+                CanSwitch = true;
+                DurationAccepted?.
+                    Invoke(TimeSpan.FromMilliseconds(_player.Duration));
             };
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(500);
-                    Debug.WriteLine($"+++++ CurrentPosition {TimeSpan.FromMilliseconds(player.CurrentPosition):m\\:ss}");
-                }
-            });
-            player.SetDataSource(Android.App.Application.Context, Android.Net.Uri.Parse(zz));
-            player.Prepare();
-            player.Start();
         }
+
+        public event Action<TimeSpan> DurationAccepted;
+        public event Action Finished;
+        public event Action<double> Buffered;
+        public event Action<TimeSpan> PositionChanged;
+
+        public void PlayNew(Music m)
+        {
+            var uri = m._GetUri();
+
+            if (uri == null)
+            {
+                throw new Exception("++++++++++++++++++");
+            }
+            _player.Reset();
+            _player.SetDataSource(Android.App.Application.Context, Android.Net.Uri.Parse(uri.AbsoluteUri));
+            _player.Prepare();
+            Start();
+        }
+        public void SeekTo(int seek)
+        {
+            CanSwitch = true;
+            _player.SeekTo(seek);
+            PositionChanged?.Invoke(TimeSpan.FromSeconds(seek));
+        }
+        public async void Start()
+        {
+            _player.Start();
+            if (TrackingPosition) return;
+            TrackingPosition = true;
+            while (TrackingPosition)
+            {
+                await Task.Delay(200).ConfigureAwait(false);
+                CurrentPosition = _player.CurrentPosition;
+            }
+        }
+        public void Stop()
+        {
+            TrackingPosition = false;
+            _player.Stop();
+        }
+        public void Pause()
+        {
+            TrackingPosition = false;
+            _player.Pause();
+        }
+
+        private double _currentBuffered;
+        private double CurrentBuffered
+        {
+            set
+            {
+                if (_currentBuffered != value)
+                {
+                    _currentBuffered = value;
+                    Buffered?.Invoke(value / 100);
+                }
+            }
+        }
+        private bool CanSwitch = false;
+        private int FileDuration;
+        private int _currentPosition;
+        private int CurrentPosition
+        {
+            set
+            {
+                if (CanSwitch && FileDuration - value < 300)
+                {
+                    CanSwitch = false;
+                    Finished?.Invoke();
+                }
+
+                if (_currentPosition != value)
+                {
+                    _currentPosition = value;
+                    PositionChanged?.Invoke(TimeSpan.FromMilliseconds(value));
+                }
+            }
+        }
+        private bool TrackingPosition = false;
     }
 }

@@ -1,12 +1,15 @@
 ﻿using Android.App;
+using Android.Content;
 using Android.Content.PM;
+using Android.Graphics;
 using Android.Media;
-using Android.Net;
+using Android.Media.Session;
 using Android.OS;
 using Android.Runtime;
+using Android.Support.V4.Media;
 using Android.Util;
-using MediaManager;
-using System.Threading.Tasks;
+using Android.Views;
+using System;
 
 namespace FlexMusicBox.Droid
 {
@@ -17,16 +20,19 @@ namespace FlexMusicBox.Droid
         {
             base.OnCreate(savedInstanceState);
 
-            //var CMM = new CrossMediaManager222();
-            //CMM.Current.Init(this);
-            
-            //MediaManager.CrossMediaManager.Current.Init(this);
-
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
 
             initFontScale();
-            LoadApplication(new App());
+
+            var app = new App(Color => Window.SetStatusBarColor(Color));
+
+            LoadApplication(app);
+
+            var am = (AudioManager)this.GetSystemService(AudioService);
+            var componentName = new ComponentName(PackageName, 
+                new MyMediaButtonBroadcastReceiver().ComponentName);
+            am.RegisterMediaButtonEventReceiver(componentName);
         }
 
         private void initFontScale()

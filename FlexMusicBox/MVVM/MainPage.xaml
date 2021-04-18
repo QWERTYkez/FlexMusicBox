@@ -38,10 +38,11 @@
         <local:DurationConverter x:Key="DurationConverter" />
         <local:GridLengthConverter x:Key="GridLengthConverter" />
         <local:AudioNameConverter x:Key="AudioNameConverter" />
+        <local:BoolToBrushConverter x:Key="BoolToBrushConverter" />
     </ContentPage.Resources>
 
     <Grid BackgroundColor="#202021">
-
+        <Grid IsVisible="{Binding LoadingGrdIsVisible}" />
 
 
         <!--  1111111  VkAuthGrd  -->
@@ -111,7 +112,7 @@
 
 
         <!--  222222 VkPlaylistGrd  -->
-        <Grid IsVisible="{Binding VkPlaylistGrdIsVisible}">
+        <Grid IsVisible="{Binding PlaylistGrdIsVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -130,7 +131,8 @@
                     Margin="40,-5,40,0"
                     Command="{Binding Cmd_VkShowAll}"
                     FontAttributes="Bold"
-                    FontSize="20"
+                    FontSize="26"
+                    HeightRequest="100"
                     Text="Вся музыка" />
                 <Label
                     Grid.Row="1"
@@ -184,14 +186,50 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <!--  Колонка меню  -->
-                <Grid>
-                    <Button
-                        Padding="0,-40,0,0"
-                        Command="{Binding Cmd_ToPlayer}"
-                        FontSize="150"
-                        HorizontalOptions="End"
-                        Text="«▶»"
-                        WidthRequest="300" />
+                <Grid Margin="10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid
+                        Grid.Column="0"
+                        HeightRequest="150"
+                        WidthRequest="150">
+                        <BoxView
+                            CornerRadius="40"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+                        <Image Margin="15" Source="LogoVK.png" />
+                        <Button Background="#05000000" Command="{Binding Cmd_SwitchToVK}" />
+                    </Grid>
+                    <Grid
+                        Grid.Column="1"
+                        Margin="10,0,0,0"
+                        HeightRequest="150"
+                        WidthRequest="150">
+                        <BoxView
+                            CornerRadius="40"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+                        <Image Margin="15" Source="LogoYandex.png" />
+                        <Button Background="#05000000" Command="{Binding Cmd_SwitchToYandex}" />
+                    </Grid>
+
+                    <Grid Grid.Column="2" Margin="10,0,0,0">
+                        <BoxView
+                            CornerRadius="40"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+                        <Image Margin="15" Source="PlayerControl.png" />
+                        <Button
+                            BackgroundColor="#05000000"
+                            Command="{Binding Cmd_ToPlayer}"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+                    </Grid>
+
                 </Grid>
 
                 <!--  Колонка песен  -->
@@ -282,7 +320,7 @@
 
         <!--  3333333  PlayerGrd            ❘❘ ▶  -->
         <Grid BackgroundColor="#202021" IsVisible="{Binding PlayerGrdIsVisible}">
-            <Image Aspect="AspectFill" Source="Background.jpg" />
+            <Image Aspect="AspectFill" Source="VKBackground.jpg" />
 
             <Grid
                 Margin="10"
@@ -356,15 +394,17 @@
                 HorizontalOptions="End"
                 VerticalOptions="Start"
                 WidthRequest="250">
+                <BoxView CornerRadius="40" />
+                <Image
+                    Margin="25"
+                    Aspect="AspectFit"
+                    Source="MusicList.png" />
                 <Button
-                    Padding="-50,-190,0,0"
+                    Margin="10"
                     BackgroundColor="#05000000"
                     Command="{Binding Cmd_ToAudioList}"
-                    FontSize="350"
-                    Rotation="180"
-                    Text="↪"
                     TextColor="White"
-                    VerticalOptions="Center" />
+                    VerticalOptions="Fill" />
             </Grid>
 
 
@@ -500,6 +540,64 @@
                         Value="{Binding DurationSliderCurrent}" />
                 </Grid>
             </Grid>
+
+            <StackLayout
+                Margin="5,50"
+                HorizontalOptions="Start"
+                VerticalOptions="End">
+                <Grid
+                    Margin="10,0"
+                    HeightRequest="150"
+                    WidthRequest="150">
+                    <BoxView
+                        Background="{Binding ShuffleMode, Converter={StaticResource BoolToBrushConverter}, Mode=OneWay}"
+                        CornerRadius="40"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+                    <Image Margin="30" Source="Shuffle.png" />
+                    <Button Background="#05000000" Command="{Binding Cmd_Shuffle}" />
+                </Grid>
+                <Grid
+                    Margin="10"
+                    HeightRequest="150"
+                    WidthRequest="150">
+                    <BoxView
+                        Background="{Binding RepeatMode, Converter={StaticResource BoolToBrushConverter}, Mode=OneWay}"
+                        CornerRadius="40"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+                    <Image Margin="30" Source="Repeat.png" />
+                    <Button Background="#05000000" Command="{Binding Cmd_Repeat}" />
+                </Grid>
+            </StackLayout>
+
+            <StackLayout
+                Margin="5,50"
+                HorizontalOptions="End"
+                VerticalOptions="End">
+                <Grid
+                    Margin="10,0"
+                    HeightRequest="150"
+                    WidthRequest="150">
+                    <BoxView
+                        CornerRadius="40"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+                    <Image Margin="15" Source="LogoVK.png" />
+                    <Button Background="#05000000" Command="{Binding Cmd_SwitchToVK}" />
+                </Grid>
+                <Grid
+                    Margin="10"
+                    HeightRequest="150"
+                    WidthRequest="150">
+                    <BoxView
+                        CornerRadius="40"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+                    <Image Margin="15" Source="LogoYandex.png" />
+                    <Button Background="#05000000" Command="{Binding Cmd_SwitchToYandex}" />
+                </Grid>
+            </StackLayout>
         </Grid>
     </Grid>
 
