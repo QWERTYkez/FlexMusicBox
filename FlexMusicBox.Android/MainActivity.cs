@@ -1,15 +1,11 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Graphics;
 using Android.Media;
-using Android.Media.Session;
 using Android.OS;
 using Android.Runtime;
-using Android.Support.V4.Media;
 using Android.Util;
 using Android.Views;
-using System;
 
 namespace FlexMusicBox.Droid
 {

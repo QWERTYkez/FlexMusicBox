@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Threading.Tasks;
 using VkNet.Model.Attachments;
 using Xamarin.Forms;
 
@@ -14,6 +15,9 @@ namespace FlexMusicBox
             InitializeComponent();
 
             var grd = new Grid();
+
+            VM.Animation1 = () => Loading1.RelRotateTo(900, 5000);
+            VM.Animation2 = () => Loading2.RelRotateTo(900, 5000);
 
             VM.Dispatcher = this.Dispatcher;
             VM.MusicsListView = this.MusicsListView;

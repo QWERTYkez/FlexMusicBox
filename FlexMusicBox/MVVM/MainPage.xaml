@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:FlexMusicBox"
     xmlns:lst="clr-namespace:System.Collections.Generic;assembly=mscorlib"
-    x:Name="MainElement">
+    x:Name="MainElement"
+    BackgroundColor="#202021">
 
     <ContentPage.BindingContext>
         <local:MainPageViewModel />
@@ -41,78 +42,174 @@
         <local:BoolToBrushConverter x:Key="BoolToBrushConverter" />
     </ContentPage.Resources>
 
-    <Grid BackgroundColor="#202021">
-        <Grid IsVisible="{Binding LoadingGrdIsVisible}" />
-
+    <Grid>
 
         <!--  1111111  VkAuthGrd  -->
-        <Grid
-            HorizontalOptions="Center"
-            IsVisible="{Binding VkAuthGrdIsVisible}"
-            VerticalOptions="Center">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition Height="70" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Label
-                Margin="20"
-                FontAttributes="Bold"
-                FontSize="40"
-                HorizontalOptions="Center"
-                Text="Регистрация" />
-            <Grid Grid.Row="1">
+        <Grid IsVisible="{Binding VkAuthGrdIsVisible}">
+            <Grid HorizontalOptions="Center" VerticalOptions="Center">
                 <Grid.RowDefinitions>
                     <RowDefinition />
-                    <RowDefinition Height="5" />
+                    <RowDefinition />
+                    <RowDefinition Height="70" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="300" />
-                </Grid.ColumnDefinitions>
                 <Label
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    FontSize="20"
-                    Text="Логин:"
-                    VerticalOptions="Center" />
+                    Margin="20"
+                    FontAttributes="Bold"
+                    FontSize="40"
+                    HorizontalOptions="Center"
+                    Text="Регистрация" />
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="5" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="300" />
+                    </Grid.ColumnDefinitions>
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        FontSize="20"
+                        Text="Логин:"
+                        VerticalOptions="Center" />
+                    <Label
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        FontSize="20"
+                        Text="Пароль:"
+                        VerticalOptions="Center" />
+                    <Frame
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Padding="3">
+                        <Entry Keyboard="Email" Text="{Binding VkLogin}" />
+                    </Frame>
+                    <Frame
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Padding="3">
+                        <Entry IsPassword="True" Text="{Binding VkPass}" />
+                    </Frame>
+                </Grid>
                 <Label
                     Grid.Row="2"
-                    Grid.Column="0"
                     FontSize="20"
-                    Text="Пароль:"
-                    VerticalOptions="Center" />
-                <Frame
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Padding="3">
-                    <Entry Keyboard="Email" Text="{Binding VkLogin}" />
-                </Frame>
-                <Frame
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    Padding="3">
-                    <Entry IsPassword="True" Text="{Binding VkPass}" />
-                </Frame>
+                    HorizontalOptions="Center"
+                    Text="{Binding VkAuthInfo}"
+                    VerticalOptions="End" />
+                <Button
+                    Grid.Row="3"
+                    Margin="30"
+                    Command="{Binding Cmd_VkAuth}"
+                    Text="Войти" />
             </Grid>
-            <Label
-                Grid.Row="2"
-                FontSize="20"
-                HorizontalOptions="Center"
-                Text="{Binding VkAuthInfo}"
-                VerticalOptions="End" />
-            <Button
-                Grid.Row="3"
-                Margin="30"
-                Command="{Binding Cmd_VkAuth}"
-                Text="Войти" />
+            <Frame
+                Margin="20"
+                Padding="0"
+                BackgroundColor="Transparent"
+                BorderColor="Gray"
+                CornerRadius="40"
+                HeightRequest="150"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                WidthRequest="200">
+                <Grid>
+                    <Image Margin="20,0" Source="Back.png" />
+                    <Button BackgroundColor="Transparent" Command="{Binding Cmd_BackToList}" />
+                </Grid>
+            </Frame>
+            <Grid Margin="0,0,100,0" HorizontalOptions="End">
+                <Image Margin="15" Source="LogoVK.png" />
+            </Grid>
+        </Grid>
+
+        <Grid IsVisible="{Binding YaAuthGrdIsVisible}">
+            <Grid HorizontalOptions="Center" VerticalOptions="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition Height="70" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Label
+                    Margin="20"
+                    FontAttributes="Bold"
+                    FontSize="40"
+                    HorizontalOptions="Center"
+                    Text="Регистрация" />
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="5" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="300" />
+                    </Grid.ColumnDefinitions>
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        FontSize="20"
+                        Text="Логин:"
+                        VerticalOptions="Center" />
+                    <Label
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        FontSize="20"
+                        Text="Пароль:"
+                        VerticalOptions="Center" />
+                    <Frame
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Padding="3">
+                        <Entry Keyboard="Email" Text="{Binding YaLogin}" />
+                    </Frame>
+                    <Frame
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Padding="3">
+                        <Entry IsPassword="True" Text="{Binding YaPass}" />
+                    </Frame>
+                </Grid>
+                <Label
+                    Grid.Row="2"
+                    FontSize="20"
+                    HorizontalOptions="Center"
+                    Text="{Binding YaAuthInfo}"
+                    VerticalOptions="End" />
+                <Button
+                    Grid.Row="3"
+                    Margin="30"
+                    Command="{Binding Cmd_YaAuth}"
+                    Text="Войти" />
+            </Grid>
+            <Frame
+                Margin="20"
+                Padding="0"
+                BackgroundColor="Transparent"
+                BorderColor="Gray"
+                CornerRadius="40"
+                HeightRequest="150"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                WidthRequest="200">
+                <Grid>
+                    <Image Margin="20,0" Source="Back.png" />
+                    <Button BackgroundColor="Transparent" Command="{Binding Cmd_BackToList}" />
+                </Grid>
+            </Frame>
+            <Grid Margin="0,0,100,0" HorizontalOptions="End">
+                <Image Margin="15" Source="LogoYandex.png" />
+            </Grid>
         </Grid>
 
 
         <!--  222222 VkPlaylistGrd  -->
-        <Grid IsVisible="{Binding PlaylistGrdIsVisible}">
+        <Grid BackgroundColor="#202021" IsVisible="{Binding PlaylistGrdIsVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -126,14 +223,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Button
-                    Grid.Row="0"
-                    Margin="40,-5,40,0"
-                    Command="{Binding Cmd_VkShowAll}"
-                    FontAttributes="Bold"
-                    FontSize="26"
-                    HeightRequest="100"
-                    Text="Вся музыка" />
                 <Label
                     Grid.Row="1"
                     Margin="0,0,0,-5"
@@ -149,6 +238,23 @@
                         SeparatorVisibility="Default"
                         VerticalOptions="StartAndExpand"
                         WidthRequest="290">
+                        <ListView.Header>
+                            <Frame
+                                Margin="20,5"
+                                BackgroundColor="Transparent"
+                                BorderColor="Gray"
+                                CornerRadius="40">
+                                <Button
+                                    BackgroundColor="Transparent"
+                                    Command="{Binding Cmd_VkShowAll}"
+                                    FontAttributes="Bold"
+                                    FontSize="26"
+                                    HeightRequest="100"
+                                    Text="Вся музыка"
+                                    TextColor="White"
+                                    WidthRequest="233" />
+                            </Frame>
+                        </ListView.Header>
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <ViewCell>
@@ -186,7 +292,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <!--  Колонка меню  -->
-                <Grid Margin="10,0">
+                <Grid Margin="10,10,10,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition />
@@ -197,31 +303,30 @@
                         Grid.Column="0"
                         HeightRequest="150"
                         WidthRequest="150">
-                        <BoxView
-                            CornerRadius="40"
-                            HorizontalOptions="Fill"
-                            VerticalOptions="Fill" />
+                        <Frame
+                            BackgroundColor="Transparent"
+                            BorderColor="Gray"
+                            CornerRadius="40" />
                         <Image Margin="15" Source="LogoVK.png" />
-                        <Button Background="#05000000" Command="{Binding Cmd_SwitchToVK}" />
+                        <Button Background="#05000000" Command="{Binding Cmd_SwitchListToVK}" />
                     </Grid>
                     <Grid
                         Grid.Column="1"
                         Margin="10,0,0,0"
                         HeightRequest="150"
                         WidthRequest="150">
-                        <BoxView
-                            CornerRadius="40"
-                            HorizontalOptions="Fill"
-                            VerticalOptions="Fill" />
+                        <Frame
+                            BackgroundColor="Transparent"
+                            BorderColor="Gray"
+                            CornerRadius="40" />
                         <Image Margin="15" Source="LogoYandex.png" />
-                        <Button Background="#05000000" Command="{Binding Cmd_SwitchToYandex}" />
+                        <Button Background="#05000000" Command="{Binding Cmd_SwitchListToYandex}" />
                     </Grid>
-
                     <Grid Grid.Column="2" Margin="10,0,0,0">
-                        <BoxView
-                            CornerRadius="40"
-                            HorizontalOptions="Fill"
-                            VerticalOptions="Fill" />
+                        <Frame
+                            BackgroundColor="Transparent"
+                            BorderColor="Gray"
+                            CornerRadius="40" />
                         <Image Margin="15" Source="PlayerControl.png" />
                         <Button
                             BackgroundColor="#05000000"
@@ -229,7 +334,6 @@
                             HorizontalOptions="Fill"
                             VerticalOptions="Fill" />
                     </Grid>
-
                 </Grid>
 
                 <!--  Колонка песен  -->
@@ -312,9 +416,28 @@
                             VerticalOptions="Fill" />
                     </Grid>
                 </ScrollView>
+
+                <Grid
+                    Grid.Row="1"
+                    BackgroundColor="#202021"
+                    IsVisible="{Binding Awaiting}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Image
+                        x:Name="Loading1"
+                        Margin="25"
+                        Source="Loading.png" />
+                    <Label
+                        Grid.Row="1"
+                        Margin="0,0,0,40"
+                        FontSize="50"
+                        Text="{Binding AwaitMessage}" />
+                </Grid>
             </Grid>
         </Grid>
-
+        <Grid BackgroundColor="#00000000" IsVisible="{Binding Awaiting}" />
 
 
 
@@ -578,27 +701,49 @@
                 <Grid
                     Margin="10,0"
                     HeightRequest="150"
+                    IsVisible="{Binding VkAuthorized}"
                     WidthRequest="150">
                     <BoxView
                         CornerRadius="40"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill" />
                     <Image Margin="15" Source="LogoVK.png" />
-                    <Button Background="#05000000" Command="{Binding Cmd_SwitchToVK}" />
+                    <Button Background="#05000000" Command="{Binding Cmd_SwitchPlayerToVK}" />
                 </Grid>
                 <Grid
                     Margin="10"
                     HeightRequest="150"
+                    IsVisible="{Binding YaAuthorized}"
                     WidthRequest="150">
                     <BoxView
                         CornerRadius="40"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill" />
                     <Image Margin="15" Source="LogoYandex.png" />
-                    <Button Background="#05000000" Command="{Binding Cmd_SwitchToYandex}" />
+                    <Button Background="#05000000" Command="{Binding Cmd_SwitchPlayerToYandex}" />
                 </Grid>
             </StackLayout>
+
+            <Grid IsVisible="{Binding Awaiting}">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid Grid.RowSpan="2">
+                    <Image Aspect="AspectFill" Source="VKBackground.jpg" />
+                </Grid>
+                <Image
+                    x:Name="Loading2"
+                    Margin="25"
+                    Source="Loading.png" />
+                <Label
+                    Grid.Row="1"
+                    Margin="0,0,0,40"
+                    FontSize="75"
+                    Text="{Binding AwaitMessage}" />
+            </Grid>
         </Grid>
+        <Grid BackgroundColor="#00000000" IsVisible="{Binding Awaiting}" />
     </Grid>
 
 </ContentPage>

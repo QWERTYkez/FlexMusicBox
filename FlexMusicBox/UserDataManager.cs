@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using VkNet.Model;
 
 namespace FlexMusicBox
@@ -14,7 +15,34 @@ namespace FlexMusicBox
         public static bool Get_VkPlayerPosition(out VkPlayerPosition obj) => GetProp("VkPlayerPosition", out obj);
         public static VkPlayerPosition VkPlayerPosition { set => SaveProp("VkPlayerPosition", value); }
 
-        public static void SaveProps(Props props)
+        public static bool Get_SourceType(out SourceType obj)
+        {
+            var b = GetProp("SourceType", out int i);
+            obj = i switch
+            {
+                0 => SourceType.None,
+                1 => SourceType.Vkontakte,
+                2 => SourceType.Yandex,
+                _ => throw new Exception("такого источника не бывает")
+            };
+            return b;
+        }
+        public static SourceType SourceType 
+        { 
+            set 
+            {
+                int i = value switch
+                {
+                    SourceType.None => 0,
+                    SourceType.Vkontakte => 1,
+                    SourceType.Yandex => 2,
+                    _ => throw new Exception("такого источника не бывает")
+                };
+                SaveProp("SourceType", i);
+            } 
+        }
+
+        public static void SaveProps(VkProps props)
         {
             if (props.VkToken != null)
             {
@@ -30,6 +58,11 @@ namespace FlexMusicBox
         private static void SaveProp(string Name, string Prop)
         {
             App.Current.Properties[Name] = Prop;
+            App.Current.SavePropertiesAsync();
+        }
+        private static void SaveProp(string Name, int Prop)
+        {
+            App.Current.Properties[Name] = Prop.ToString();
             App.Current.SavePropertiesAsync();
         }
         private static void SaveProp<T>(string Name, T Prop) where T : class
@@ -50,7 +83,20 @@ namespace FlexMusicBox
                 return false;
             }
         }
-        private static bool GetProp<T>(string Name, out T Prop) where T : class
+        private static bool GetProp(string Name, out int Prop)
+        {
+            if (App.Current.Properties.TryGetValue(Name, out object o))
+            {
+                Prop = Convert.ToInt32(o);
+                return true;
+            }
+            else
+            {
+                Prop = 0;
+                return false;
+            }
+        }
+        private static bool GetProp<T>(string Name, out T Prop) where T: class
         {
             if (App.Current.Properties.TryGetValue(Name, out object o))
             {
@@ -65,7 +111,7 @@ namespace FlexMusicBox
         }
     }
 
-    public class Props
+    public class VkProps
     {
         public string VkToken { get; set; } = null;
         public VkUserAuth VkUserAuth { get; set; } = null;

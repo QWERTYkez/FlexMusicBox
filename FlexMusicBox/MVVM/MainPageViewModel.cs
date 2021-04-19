@@ -90,8 +90,11 @@ namespace FlexMusicBox
         public Command Cmd_ToPlayer { get; set; }
         public Command Cmd_Shuffle { get; set; }
         public Command Cmd_Repeat { get; set; }
-        public Command Cmd_SwitchToVK { get; set; }
-        public Command Cmd_SwitchToYandex { get; set; }
+        public Command Cmd_SwitchListToVK { get; set; }
+        public Command Cmd_SwitchListToYandex { get; set; }
+        public Command Cmd_SwitchPlayerToVK { get; set; }
+        public Command Cmd_SwitchPlayerToYandex { get; set; }
+        public Command Cmd_BackToList { get; set; }
 
         public MainPageViewModel()
         {
@@ -102,8 +105,69 @@ namespace FlexMusicBox
             App.MediaNextPressed += () => Music.CurrentPlayingMusic?.PlayNext();
             App.MediaPreviousPressed += () => Music.CurrentPlayingMusic?.PlayPrevious();
 
+            _vk.OnTokenExpires += s =>
+            {
+                _vk.RefreshToken();
+                DM.VkToken = _vk.Token;
+            };
+            _vk.OnTokenUpdatedAutomatically += s => DM.VkToken = _vk.Token;
             //_vk.CaptchaHandler = new CaptchaHandler();
             //_vk.CaptchaSolver = new CaptchaSolver();
+
+            Cmd_SwitchListToVK = new Command(() =>
+            {
+                if (VkAuthorized)
+                {
+
+                }
+                else
+                {
+                    VkAuthGrdIsVisible = true;
+                    PlaylistGrdIsVisible = false;
+                }
+            });
+            Cmd_SwitchListToYandex = new Command(() =>
+            {
+                if (YaAuthorized)
+                {
+
+                }
+                else
+                {
+                    YaAuthGrdIsVisible = true;
+                    PlaylistGrdIsVisible = false;
+                }
+            });
+            Cmd_BackToList = new Command(() =>
+            {
+                PlaylistGrdIsVisible = true;
+                VkAuthGrdIsVisible = false;
+                YaAuthGrdIsVisible = false;
+            });
+            Cmd_SwitchPlayerToVK = new Command(() =>
+            {
+                //if (YaAuthorized)
+                //{
+
+                //}
+                //else
+                //{
+                //    VkAuthGrdIsVisible = true;
+                //    PlaylistGrdIsVisible = false;
+                //}
+            });
+            Cmd_SwitchPlayerToYandex = new Command(() =>
+            {
+                //if (YaAuthorized)
+                //{
+
+                //}
+                //else
+                //{
+                //    VkAuthGrdIsVisible = true;
+                //    PlayerGrdIsVisible = false;
+                //}
+            });
 
             Cmd_VkAuth = new Command(() =>
             {
@@ -127,7 +191,7 @@ namespace FlexMusicBox
                         return;
                     }
 
-                    DM.SaveProps(new Props
+                    DM.SaveProps(new VkProps
                     {
                         VkUserAuth = new VkUserAuth(Login, Pass, _vk.UserId.Value),
                         VkToken = _vk.Token
@@ -136,10 +200,11 @@ namespace FlexMusicBox
                     VkAuthInfo = "Авторизация пройдена";
 
                     await Task.Delay(1000);
-                    VkOpened();
+                    Await1("Загрузка плейлистов");
+                    OnVkAuthorized();
                 });
             });
-            Cmd_VkShowAll = new Command(() => 
+            Cmd_VkShowAll = new Command(() =>
             {
                 SelectedPlaylist = null;
                 SelectedPlaylist = DefaultPlaylist;
@@ -188,70 +253,90 @@ namespace FlexMusicBox
         {
             return Task.Run(() =>
             {
-                //_vk.OnTokenExpires += s =>
-                //{
-                //    _vk.RefreshToken();
-                //    DM.VkToken = _vk.Token;
-                //};
-                //_vk.OnTokenUpdatedAutomatically += s => DM.VkToken = _vk.Token;
+                if (DM.Get_SourceType(out var st))
+                {
+                    st = SourceType.Vkontakte;
+                    switch (st)
+                    {
+                        case SourceType.Vkontakte:
+                            {
+                                if (DM.Get_VkPlayerPosition(out VkPlayerPosition pp))
+                                    Await2("Авторизация ВК");
+                                else Await1("Авторизация ВК");
 
-                //ApiAuthParams Ap = null;
-                //if (DM.Get_VkUserAuth(out var UserAuth))
-                //{
-                //    Ap = UserAuth.ApiAuthParams;
-                //    VkLogin = UserAuth.Login;
-                //    VkPass = UserAuth.Pass;
-                //}
-                //if (DM.Get_VkToken(out var token))
-                //{
-                //    try
-                //    {
-                //        _vk.Authorize(new ApiAuthParams { AccessToken = token, UserId = Ap.UserId });
-                //        VkOpened();
-                //        return;
-                //    }
-                //    catch
-                //    {
-                //        if (Ap != null)
-                //        {
-                //            _vk.Authorize(Ap);
-                //            DM.VkToken = _vk.Token;
-                //            VkOpened();
-                //            return;
-                //        }
-                //    }
-                //}
-                //else
-                //{
-                //    if (Ap != null)
-                //    {
-                //        _vk.Authorize(Ap);
-                //        DM.VkToken = _vk.Token;
-                //        VkOpened();
-                //        return;
-                //    }
-                //}
-                //VkAuthGrdIsVisible = true;
+                                VkAuthorization(pp);
+                            }
+                            break;
+                        case SourceType.Yandex:
+                            {
+
+                            }
+                            break;
+                        case SourceType.None: goto SourceTypeFalse;
+                    }
+                }
+                else goto SourceTypeFalse;
+        SourceTypeFalse:
+                {
+                    PlaylistGrdIsVisible = true;
+                    Await1("Авторизация ВК");
+                    VkAuthorization();
+                }
             });
         }
-        void VkOpened()
+        void VkAuthorization(VkPlayerPosition pp = null)
         {
-            Task.Run(() =>
+            ApiAuthParams Ap = null;
+            if (DM.Get_VkUserAuth(out var UserAuth))
             {
-                VkAuthGrdIsVisible = false;
-                PlaylistGrdIsVisible = true;
+                Ap = UserAuth.ApiAuthParams;
+                VkLogin = UserAuth.Login;
+                VkPass = UserAuth.Pass;
 
-                Playlists = new ObservableCollection<Playlist>(_vk.Audio.GetPlaylists(_vk.UserId.Value).Select(p => new Playlist(p)));
-                DefaultPlaylist = new Playlist();
-                SelectedPlaylist = DefaultPlaylist;
-
-                RestorePlaying();
-            });
+                if (DM.Get_VkToken(out var token))
+                {
+                    try
+                    {
+                        _vk.Authorize(new ApiAuthParams { AccessToken = token, UserId = Ap.UserId });
+                        OnVkAuthorized(pp);
+                        return;
+                    }
+                    catch
+                    {
+                        if (Ap != null)
+                        {
+                            _vk.Authorize(Ap);
+                            DM.VkToken = _vk.Token;
+                            OnVkAuthorized(pp);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    if (Ap != null)
+                    {
+                        _vk.Authorize(Ap);
+                        DM.VkToken = _vk.Token;
+                        OnVkAuthorized(pp);
+                        return;
+                    }
+                }
+            }
+            Awaited();
         }
-        void RestorePlaying()
+        void OnVkAuthorized(VkPlayerPosition pp = null)
         {
-            if (DM.Get_VkPlayerPosition(out var pp))
+            AwaitMessage = "Загрузка плейлистов ВК";
+            VkAuthorized = true;
+
+            Playlists = new ObservableCollection<Playlist>(_vk.Audio.GetPlaylists(_vk.UserId.Value).Select(p => new Playlist(p)));
+            DefaultPlaylist = new Playlist();
+            SelectedPlaylist = DefaultPlaylist;
+
+            if (pp != null)
             {
+                AwaitMessage = "Восстановление проигрывателя";
                 var pls = Playlist.AllPlaylists.Where(p => p.Id == pp.PlaylistId).ToList();
                 if (pls.Count > 0)
                 {
@@ -260,10 +345,13 @@ namespace FlexMusicBox
                     {
                         __shuffleMode = pp.Shuffle;
                         msics[pp.MusicIndex].Play();
-                        PlayerGrdIsVisible = true;
                     }
+                    else PlaylistGrdIsVisible = true;
                 }
+                else PlaylistGrdIsVisible = true;
             }
+
+            Awaited();
         }
 
         bool Scroll = false;
@@ -278,14 +366,14 @@ namespace FlexMusicBox
                     {
                         var New = SelectedPlaylist._Get(_skip + MaxDispQuantity, (MaxDispQuantity / 2));
 
-                        Dispatcher.BeginInvokeOnMainThread(() => 
+                        Dispatcher.BeginInvokeOnMainThread(() =>
                         {
                             for (int i = 0; i < New.Count; i++)
                             {
                                 VkAudios.Add(New[i]);
                                 VkAudios.RemoveAt(0);
                             }
-                            Task.Run(() => 
+                            Task.Run(() =>
                             {
                                 Scrolled(-New.Count * RowHeight);
 
@@ -329,12 +417,44 @@ namespace FlexMusicBox
             }
         }
 
+        public string AwaitMessage { get; set; }
+        public bool Awaiting { get; set; } = false;
+        private void Awaited() => Awaiting = false;
+
+        public Func<Task<bool>> Animation1;
+        private void Await1(string msg)
+        {
+            AwaitMessage = msg;
+            Awaiting = true;
+            PlaylistGrdIsVisible = true;
+            Task.Run(async () =>
+            {
+                while (Awaiting)
+                    await Animation1?.Invoke();
+            });
+        }
+        public Func<Task<bool>> Animation2;
+        private void Await2(string msg)
+        {
+            AwaitMessage = msg;
+            Awaiting = true;
+            PlayerGrdIsVisible = true;
+            Task.Run(async () =>
+            {
+                while (Awaiting)
+                    await Animation2?.Invoke();
+            });
+        }
+
         public string VkLogin { get; set; }
         public string VkPass { get; set; }
         public string VkAuthInfo { get; set; }
 
-        public bool LoadingGrdIsVisible { get; set; } = true;
+        public bool VkAuthorized { get; set; } = false;
+        public bool YaAuthorized { get; set; } = false;
+
         public bool VkAuthGrdIsVisible { get; set; } = false;
+        public bool YaAuthGrdIsVisible { get; set; } = false;
         public bool PlaylistGrdIsVisible { get; set; } = false;
         public bool PlayerGrdIsVisible { get; set; } = false;      ////////////
 
@@ -343,7 +463,6 @@ namespace FlexMusicBox
 
         public bool PlayButtonIsVisible { get; set; } = false;
         public bool PauseButtonIsVisible { get; set; } = true;
-
 
         public bool ShuffleMode { get => _ShuffleMode; set => _ShuffleMode = value; }
         private static bool __shuffleMode = false;
@@ -602,6 +721,12 @@ namespace FlexMusicBox
 
             VM._MP.PlayNew(this);
 
+            DM.VkPlayerPosition = new VkPlayerPosition
+            {
+                PlaylistId = CurrentPlayingMusic.PlaylistId,
+                MusicIndex = CurrentPlayingMusic.MusicIndex,
+                Shuffle = VM._ShuffleMode
+            };
         }
         public void PlayNext(bool auto = false)
         {
