@@ -12,8 +12,52 @@ namespace FlexMusicBox
         public static bool Get_VkUserAuth(out VkUserAuth obj) => GetProp("VkUserAuth", out obj);
         public static VkUserAuth VkUserAuth { set => SaveProp("VkUserAuth", value); }
 
-        public static bool Get_VkPlayerPosition(out VkPlayerPosition obj) => GetProp("VkPlayerPosition", out obj);
+        public static bool Get_YaUserAuth(out YaUserAuth obj) => GetProp("YaUserAuth", out obj);
+        public static YaUserAuth YaUserAuth { set => SaveProp("YaUserAuth", value); }
+
+        public static bool Get_VkPlayerPosition(out VkPlayerPosition obj)
+        {
+            
+            if (GetProp("VkPlayerPosition", out obj))
+            {
+                if (Get_VkShiftMS(out int sec))
+                {
+                    obj.ShiftMS = sec;
+                }
+                return true;
+            }
+            else
+            {
+                obj = null;
+                return false;
+            }
+        }
+            
         public static VkPlayerPosition VkPlayerPosition { set => SaveProp("VkPlayerPosition", value); }
+
+        public static bool Get_YaPlayerPosition(out YaPlayerPosition obj)
+        {
+            if (GetProp("YaPlayerPosition", out obj))
+            {
+                if (Get_YaShiftMS(out int sec))
+                {
+                    obj.ShiftMS = sec;
+                }
+                return true;
+            }
+            else
+            {
+                obj = null;
+                return false;
+            }
+        }
+        public static YaPlayerPosition YaPlayerPosition { set => SaveProp("YaPlayerPosition", value); }
+
+        public static bool Get_VkShiftMS(out int obj) => GetProp("VkShiftMS", out obj);
+        public static int VkShiftMS { set => SaveProp("VkShiftMS", value); }
+
+        public static bool Get_YaShiftMS(out int obj) => GetProp("YaShiftMS", out obj);
+        public static int YaShiftMS { set => SaveProp("YaShiftMS", value); }
 
         public static bool Get_SourceType(out SourceType obj)
         {
@@ -117,11 +161,30 @@ namespace FlexMusicBox
         public VkUserAuth VkUserAuth { get; set; } = null;
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public class VkPlayerPosition
     {
+        [JsonProperty]
         public long? PlaylistId { get; set; }
+        [JsonProperty]
         public int MusicIndex { get; set; }
+        [JsonProperty]
         public bool Shuffle { get; set; }
+        public int ShiftMS { get; set; } = -1;
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class YaPlayerPosition
+    {
+        [JsonProperty]
+        public string OwnerName { get; set; }
+        [JsonProperty]
+        public string Kind { get; set; }
+        [JsonProperty]
+        public string Id { get; set; }
+        [JsonProperty]
+        public bool Shuffle { get; set; }
+        public int ShiftMS { get; set; } = -1;
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -141,5 +204,18 @@ namespace FlexMusicBox
         public long Id { get; set; }
 
         public ApiAuthParams ApiAuthParams { get => new ApiAuthParams { Login = this.Login, Password = this.Pass, UserId = this.Id }; }
+    }
+
+    public class YaUserAuth
+    {
+        public YaUserAuth() { }
+        public YaUserAuth(string Login, string Pass, string Token)
+        {
+            this.Login = Login; this.Pass = Pass; this.Token = Token;
+        }
+
+        public string Login { get; set; }
+        public string Pass { get; set; }
+        public string Token { get; set; }
     }
 }

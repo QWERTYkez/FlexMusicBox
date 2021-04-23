@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexMusicBox", "FlexMusicBo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexMusicBox.Android", "FlexMusicBox.Android\FlexMusicBox.Android.csproj", "{27265561-8768-4805-926B-FEDF69BD4BC9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YandexMusicResolver", "..\YandexMusicResolver\YandexMusicResolver\YandexMusicResolver.csproj", "{EB76C194-E1E9-4362-BA97-94F2D8E14BD5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yandex.Music.Api", "..\Yandex.Music.Api.Fork\Yandex.Music.Api\Yandex.Music.Api.csproj", "{43E74970-B1B2-43DC-917D-BEC0C48F18C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,14 @@ Global
 		{27265561-8768-4805-926B-FEDF69BD4BC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27265561-8768-4805-926B-FEDF69BD4BC9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{27265561-8768-4805-926B-FEDF69BD4BC9}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{EB76C194-E1E9-4362-BA97-94F2D8E14BD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB76C194-E1E9-4362-BA97-94F2D8E14BD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB76C194-E1E9-4362-BA97-94F2D8E14BD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB76C194-E1E9-4362-BA97-94F2D8E14BD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43E74970-B1B2-43DC-917D-BEC0C48F18C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43E74970-B1B2-43DC-917D-BEC0C48F18C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43E74970-B1B2-43DC-917D-BEC0C48F18C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43E74970-B1B2-43DC-917D-BEC0C48F18C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

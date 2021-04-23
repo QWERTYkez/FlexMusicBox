@@ -26,20 +26,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Yandex.Music.Api.Fork\Yandex.Music.Api\Yandex.Music.Api.csproj" />
+    <ProjectReference Include="..\..\YandexMusicResolver\YandexMusicResolver\YandexMusicResolver.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Mono.Android">
       <HintPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\MonoAndroid\v10.0\Mono.Android.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="PlayFigure.xaml.cs">
-      <DependentUpon>PlayFigure.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="PlayFigure.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
   </ItemGroup>
 </Project>

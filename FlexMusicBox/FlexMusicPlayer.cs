@@ -11,7 +11,7 @@ namespace FlexMusicBox.Player
         {
             _player = new MediaPlayer();
             _player.BufferingUpdate += (s, e) => CurrentBuffered = e.Percent;
-            _player.Prepared += (s, e) => 
+            _player.Prepared += (s, e) =>
             {
                 FileDuration = _player.Duration;
                 CanSwitch = true;
@@ -25,28 +25,23 @@ namespace FlexMusicBox.Player
         public event Action<double> Buffered;
         public event Action<TimeSpan> PositionChanged;
 
-        public void PlayNew(Music m)
+        public void PlayNew(string uri, int mseek = -1)
         {
-            var uri = m._GetUri();
-
-            if (uri == null)
-            {
-                throw new Exception("++++++++++++++++++");
-            }
             _player.Reset();
-            _player.SetDataSource(Android.App.Application.Context, Android.Net.Uri.Parse(uri.AbsoluteUri));
+            _player.SetDataSource(Android.App.Application.Context, Android.Net.Uri.Parse(uri));
             _player.Prepare();
-            Start();
+            Start(mseek);
         }
-        public void SeekTo(int seek)
+        public void SeekTo(int mseek)
         {
             CanSwitch = true;
-            _player.SeekTo(seek);
-            PositionChanged?.Invoke(TimeSpan.FromSeconds(seek));
+            _player.SeekTo(mseek);
+            PositionChanged?.Invoke(TimeSpan.FromMilliseconds(mseek));
         }
-        public async void Start()
+        public async void Start(int mseek = -1)
         {
             _player.Start();
+            if (mseek > 0) SeekTo(mseek);
             if (TrackingPosition) return;
             TrackingPosition = true;
             while (TrackingPosition)
@@ -99,5 +94,49 @@ namespace FlexMusicBox.Player
             }
         }
         private bool TrackingPosition = false;
+    }
+
+    public class StreamMediaDataSource : MediaDataSource
+    {
+        System.IO.Stream data;
+
+        public StreamMediaDataSource(System.IO.Stream Data)
+        {
+            data = Data;
+        }
+
+        public override long Size
+        {
+            get
+            {
+                return data.Length;
+            }
+        }
+
+        public override int ReadAt(long position, byte[] buffer, int offset, int size)
+        {
+            data.Seek(position, System.IO.SeekOrigin.Begin);
+            return data.Read(buffer, offset, size);
+        }
+
+        public override void Close()
+        {
+            if (data != null)
+            {
+                data.Dispose();
+                data = null;
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (data != null)
+            {
+                data.Dispose();
+                data = null;
+            }
+        }
     }
 }

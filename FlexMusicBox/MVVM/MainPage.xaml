@@ -220,70 +220,66 @@
             <Grid Padding="0,5" BackgroundColor="#60000000">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Label
-                    Grid.Row="1"
+                    Grid.Row="0"
                     Margin="0,0,0,-5"
                     Text="Плейлисты:"
                     VerticalOptions="End" />
-                <RelativeLayout Grid.Row="2">
-                    <ListView
-                        ItemsSource="{Binding Playlists}"
-                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent,
-                                                                               Property=Height}"
-                        RowHeight="170"
-                        SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
-                        SeparatorVisibility="Default"
-                        VerticalOptions="StartAndExpand"
-                        WidthRequest="290">
-                        <ListView.Header>
-                            <Frame
-                                Margin="20,5"
+                <ListView
+                    Grid.Row="1"
+                    ItemsSource="{Binding Playlists}"
+                    RowHeight="170"
+                    SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}"
+                    SeparatorVisibility="Default"
+                    VerticalOptions="Fill"
+                    WidthRequest="290">
+                    <ListView.Header>
+                        <Frame
+                            Margin="20,5"
+                            BackgroundColor="Transparent"
+                            BorderColor="Gray"
+                            CornerRadius="40">
+                            <Button
                                 BackgroundColor="Transparent"
-                                BorderColor="Gray"
-                                CornerRadius="40">
-                                <Button
-                                    BackgroundColor="Transparent"
-                                    Command="{Binding Cmd_VkShowAll}"
-                                    FontAttributes="Bold"
-                                    FontSize="26"
-                                    HeightRequest="100"
-                                    Text="Вся музыка"
-                                    TextColor="White"
-                                    WidthRequest="233" />
-                            </Frame>
-                        </ListView.Header>
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <ViewCell>
-                                    <ContentView HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
-                                        <Grid HeightRequest="160" WidthRequest="270">
-                                            <Image
-                                                Aspect="AspectFill"
-                                                HorizontalOptions="CenterAndExpand"
-                                                Source="{Binding Photo}"
-                                                VerticalOptions="CenterAndExpand" />
-                                            <Frame
-                                                Padding="5"
-                                                BackgroundColor="#B0000000"
-                                                HasShadow="True"
+                                Command="{Binding Cmd_VkShowAll}"
+                                FontAttributes="Bold"
+                                FontSize="26"
+                                HeightRequest="100"
+                                Text="Вся музыка"
+                                TextColor="White"
+                                WidthRequest="233" />
+                        </Frame>
+                    </ListView.Header>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ViewCell>
+                                <ContentView HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
+                                    <Grid HeightRequest="160" WidthRequest="270">
+                                        <Image
+                                            Aspect="AspectFill"
+                                            HorizontalOptions="CenterAndExpand"
+                                            Source="{Binding Photo}"
+                                            VerticalOptions="CenterAndExpand" />
+                                        <Frame
+                                            Padding="5"
+                                            BackgroundColor="#B0000000"
+                                            HasShadow="True"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center">
+                                            <Label
                                                 HorizontalOptions="Center"
-                                                VerticalOptions="Center">
-                                                <Label
-                                                    HorizontalOptions="Center"
-                                                    LineBreakMode="WordWrap"
-                                                    Text="{Binding Title}"
-                                                    VerticalOptions="Center" />
-                                            </Frame>
-                                        </Grid>
-                                    </ContentView>
-                                </ViewCell>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </RelativeLayout>
+                                                LineBreakMode="WordWrap"
+                                                Text="{Binding Title}"
+                                                VerticalOptions="Center" />
+                                        </Frame>
+                                    </Grid>
+                                </ContentView>
+                            </ViewCell>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </Grid>
 
             <Grid Grid.Column="1">

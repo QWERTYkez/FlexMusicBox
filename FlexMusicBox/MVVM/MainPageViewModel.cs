@@ -1,5 +1,6 @@
 ﻿using FlexMusicBox.Player;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +16,11 @@ using VkNet.Model;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 using Xamarin.Forms;
+using Yandex.Music.Api;
+using Yandex.Music.Api.Common;
+using Yandex.Music.Api.Models.Common.Cover;
+using Yandex.Music.Api.Models.Playlist;
+using Yandex.Music.Api.Models.Track;
 using DM = FlexMusicBox.UserDataManager;
 using VM = FlexMusicBox.MainPageViewModel;
 
@@ -39,6 +45,9 @@ namespace FlexMusicBox
         public IDispatcher Dispatcher;
 
         public static readonly VkApi _vk;
+        public static YandexMusicApi _Ya = new YandexMusicApi();
+        public static AuthStorage _Yas = new AuthStorage();
+        public static string YaUid;
         static MainPageViewModel()
         {
             var services = new ServiceCollection();
@@ -80,6 +89,7 @@ namespace FlexMusicBox
         //}
 
         public Command Cmd_VkAuth { get; set; }
+        public Command Cmd_YaAuth { get; set; }
         public Command Cmd_VkShowAll { get; set; }
         public Command Cmd_VkSelectPlaylist { get; set; }
         public Command Cmd_Play { get; set; }
@@ -118,7 +128,7 @@ namespace FlexMusicBox
             {
                 if (VkAuthorized)
                 {
-
+                    Playlists = new ObservableCollection<Playlist>(Playlist.VkPlaylists.Where(p => p.Id != null));
                 }
                 else
                 {
@@ -130,7 +140,7 @@ namespace FlexMusicBox
             {
                 if (YaAuthorized)
                 {
-
+                    Playlists = new ObservableCollection<Playlist>(Playlist.YaPlaylists);
                 }
                 else
                 {
@@ -146,27 +156,61 @@ namespace FlexMusicBox
             });
             Cmd_SwitchPlayerToVK = new Command(() =>
             {
-                //if (YaAuthorized)
-                //{
+                if (CurrentSource != SourceType.Vkontakte)
+                {
+                    Playlists = new ObservableCollection<Playlist>(Playlist.VkPlaylists.Where(p => p.Id != null));
+                    if (DM.Get_VkPlayerPosition(out VkPlayerPosition pp))
+                    {
+                        var pls = Playlist.VkPlaylists.Where(p => p.Id == pp.PlaylistId?.ToString()).ToList();
+                        if (pls.Count > 0)
+                        {
+                            SelectedPlaylist = pls.First();
 
-                //}
-                //else
-                //{
-                //    VkAuthGrdIsVisible = true;
-                //    PlaylistGrdIsVisible = false;
-                //}
+                            var msics = SelectedPlaylist.Musics;
+                            if (msics.Count > pp.MusicIndex)
+                            {
+                                __shuffleMode = pp.Shuffle;
+                                msics[pp.MusicIndex].Play(pp.ShiftMS);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        PlaylistGrdIsVisible = true;
+                        PlayerGrdIsVisible = false;
+                    }
+                }
             });
             Cmd_SwitchPlayerToYandex = new Command(() =>
             {
-                //if (YaAuthorized)
-                //{
+                if (CurrentSource != SourceType.Yandex)
+                {
+                    Playlists = new ObservableCollection<Playlist>(Playlist.YaPlaylists);
+                    if (DM.Get_YaPlayerPosition(out YaPlayerPosition pp))
+                    {
+                        var pls = Playlist.YaPlaylists.Where(p => p.Id == pp.Kind).ToList();
+                        if (pls.Count > 0)
+                        {
+                            SelectedPlaylist = pls.First();
 
-                //}
-                //else
-                //{
-                //    VkAuthGrdIsVisible = true;
-                //    PlayerGrdIsVisible = false;
-                //}
+                            var ms = pls.First().Musics.Where(m => (m as YaMusic).Id == pp.Id);
+                            if (ms.Count() > 0)
+                            {
+                                __shuffleMode = pp.Shuffle;
+                                ms.First().Play(pp.ShiftMS);
+                            }
+                            else
+                            {
+                                pls.First().Musics[0].Play();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        PlaylistGrdIsVisible = true;
+                        PlayerGrdIsVisible = false;
+                    }
+                }
             });
 
             Cmd_VkAuth = new Command(() =>
@@ -204,6 +248,34 @@ namespace FlexMusicBox
                     OnVkAuthorized();
                 });
             });
+            Cmd_YaAuth = new Command(() => 
+            {
+                Task.Run(async () => 
+                {
+                    YaAuthInfo = "Попытка входа...";
+                    var Login = YaLogin;
+                    var Pass = YaPass;
+
+                    Login = "QWERTYkez@yandex.ru";
+                    Pass = "wL32jSv&iTx%HDS";
+
+                    try
+                    {
+                        _Ya.User.Authorize(_Yas, Login, Pass);
+
+                        VkAuthInfo = "Авторизация пройдена";
+                        DM.YaUserAuth = new YaUserAuth(Login, Pass, _Yas.Token);
+
+                        await Task.Delay(1000);
+                        Await1("Загрузка плейлистов");
+                        OnYaAuthorized();
+                    }
+                    catch
+                    {
+                        YaAuthInfo = "Ошибка";
+                    }
+                });
+            });
             Cmd_VkShowAll = new Command(() =>
             {
                 SelectedPlaylist = null;
@@ -238,6 +310,10 @@ namespace FlexMusicBox
                 else DurationGRDCurrent = Nval;
 
                 if (!DurationSliderLock) DurationSliderCurrent = position.TotalSeconds;
+
+                var shift = Convert.ToInt32(position.TotalMilliseconds);
+                if (Math.Abs(ShiftMS - shift) > 5000)
+                    ShiftMS = shift;
             };
             _MP.Finished += () =>
             {
@@ -255,7 +331,7 @@ namespace FlexMusicBox
             {
                 if (DM.Get_SourceType(out var st))
                 {
-                    st = SourceType.Vkontakte;
+                    ///////////
                     switch (st)
                     {
                         case SourceType.Vkontakte:
@@ -265,26 +341,32 @@ namespace FlexMusicBox
                                 else Await1("Авторизация ВК");
 
                                 VkAuthorization(pp);
+                                YaAuthorization(null, false);
                             }
-                            break;
+                            return;
                         case SourceType.Yandex:
                             {
+                                if (DM.Get_YaPlayerPosition(out YaPlayerPosition pp))
+                                    Await2("Авторизация Ya");
+                                else Await1("Авторизация Ya");
 
+                                YaAuthorization(pp);
+                                VkAuthorization(null, false);
                             }
-                            break;
-                        case SourceType.None: goto SourceTypeFalse;
+                            return;
                     }
                 }
-                else goto SourceTypeFalse;
-        SourceTypeFalse:
                 {
                     PlaylistGrdIsVisible = true;
                     Await1("Авторизация ВК");
-                    VkAuthorization();
+                    VkAuthorization(null, false);
+                    AwaitMessage = "Авторизация Ya";
+                    YaAuthorization(null, false);
+                    Awaited();
                 }
             });
         }
-        void VkAuthorization(VkPlayerPosition pp = null)
+        void VkAuthorization(VkPlayerPosition pp = null, bool SourceSelected = true)
         {
             ApiAuthParams Ap = null;
             if (DM.Get_VkUserAuth(out var UserAuth))
@@ -298,7 +380,7 @@ namespace FlexMusicBox
                     try
                     {
                         _vk.Authorize(new ApiAuthParams { AccessToken = token, UserId = Ap.UserId });
-                        OnVkAuthorized(pp);
+                        OnVkAuthorized(pp, SourceSelected);
                         return;
                     }
                     catch
@@ -307,7 +389,7 @@ namespace FlexMusicBox
                         {
                             _vk.Authorize(Ap);
                             DM.VkToken = _vk.Token;
-                            OnVkAuthorized(pp);
+                            OnVkAuthorized(pp, SourceSelected);
                             return;
                         }
                     }
@@ -318,40 +400,128 @@ namespace FlexMusicBox
                     {
                         _vk.Authorize(Ap);
                         DM.VkToken = _vk.Token;
-                        OnVkAuthorized(pp);
+                        OnVkAuthorized(pp, SourceSelected);
                         return;
                     }
                 }
             }
-            Awaited();
+            if (SourceSelected) Awaited();
         }
-        void OnVkAuthorized(VkPlayerPosition pp = null)
+        void OnVkAuthorized(VkPlayerPosition pp = null, bool SourceSelected = true)
         {
             AwaitMessage = "Загрузка плейлистов ВК";
-            VkAuthorized = true;
 
-            Playlists = new ObservableCollection<Playlist>(_vk.Audio.GetPlaylists(_vk.UserId.Value).Select(p => new Playlist(p)));
+            _vk.Audio.GetPlaylists(_vk.UserId.Value).Select(p => new Playlist(p)).ToList();
+            if (SourceSelected)
+                Playlists = new ObservableCollection<Playlist>(Playlist.VkPlaylists.Where(p => p.Id != null));
             DefaultPlaylist = new Playlist();
-            SelectedPlaylist = DefaultPlaylist;
 
             if (pp != null)
             {
                 AwaitMessage = "Восстановление проигрывателя";
-                var pls = Playlist.AllPlaylists.Where(p => p.Id == pp.PlaylistId).ToList();
+                var pls = Playlist.VkPlaylists.Where(p => p.Id == pp.PlaylistId?.ToString()).ToList();
                 if (pls.Count > 0)
                 {
-                    var msics = pls.First().Musics;
+                    SelectedPlaylist = pls.First();
+
+                    var msics = SelectedPlaylist.Musics;
                     if (msics.Count > pp.MusicIndex)
                     {
                         __shuffleMode = pp.Shuffle;
-                        msics[pp.MusicIndex].Play();
+                        msics[pp.MusicIndex].Play(pp.ShiftMS);
                     }
                     else PlaylistGrdIsVisible = true;
                 }
                 else PlaylistGrdIsVisible = true;
             }
 
-            Awaited();
+            VkAuthorized = true;
+            if (SourceSelected) Awaited();
+        }
+
+        void YaAuthorization(YaPlayerPosition pp = null, bool SourceSelected = true)
+        {
+            if (DM.Get_YaUserAuth(out var UserAuth))
+            {
+                try
+                {
+                    _Ya.User.Authorize(_Yas, UserAuth.Token);
+                    OnYaAuthorized(pp, SourceSelected);
+                    return;
+                }
+                catch
+                {
+                    try
+                    {
+                        _Ya.User.Authorize(_Yas, UserAuth.Login, UserAuth.Pass);
+                        UserAuth.Token = _Yas.Token;
+                        DM.YaUserAuth = UserAuth;
+                        OnYaAuthorized(pp, SourceSelected);
+                        return;
+                    }
+                    catch
+                    {
+                        if (SourceSelected) Awaited();
+                    }
+                }
+            }
+            if (SourceSelected) Awaited();
+        }
+        void OnYaAuthorized(YaPlayerPosition pp = null, bool SourceSelected = true)
+        {
+            AwaitMessage = "Загрузка плейлистов Ya";
+
+            new Playlist(_Ya.Playlist.OfTheDay(_Yas).Result);
+            if (SourceSelected)
+                Playlists = new ObservableCollection<Playlist>(Playlist.YaPlaylists);
+
+            if (pp != null)
+            {
+                AwaitMessage = "Восстановление проигрывателя";
+                var pls = Playlist.YaPlaylists.Where(p => p.Id == pp.Kind).ToList();
+                if (pls.Count > 0)
+                {
+                    SelectedPlaylist = pls.First();
+
+                    var ms = pls.First().Musics.Where(m => (m as YaMusic).Id == pp.Id);
+                    if (ms.Count() > 0)
+                    {
+                        __shuffleMode = pp.Shuffle;
+                        ms.First().Play(pp.ShiftMS);
+                    }
+                    else
+                    {
+                        pls.First().Musics[0].Play();
+                    }
+                }
+                else PlaylistGrdIsVisible = true;
+            }
+
+            YaAuthorized = true;
+            if (SourceSelected) Awaited();
+        }
+
+        int _shiftms;
+        public int ShiftMS 
+        {
+            get => _shiftms;
+            set
+            {
+                _shiftms = value;
+                switch (CurrentSource)
+                {
+                    case SourceType.Vkontakte:
+                        {
+                            DM.VkShiftMS = value;
+                        }
+                        return;
+                    case SourceType.Yandex:
+                        {
+                            DM.YaShiftMS = value;
+                        }
+                        return;
+                }
+            }
         }
 
         bool Scroll = false;
@@ -450,6 +620,10 @@ namespace FlexMusicBox
         public string VkPass { get; set; }
         public string VkAuthInfo { get; set; }
 
+        public string YaLogin { get; set; }
+        public string YaPass { get; set; }
+        public string YaAuthInfo { get; set; }
+
         public bool VkAuthorized { get; set; } = false;
         public bool YaAuthorized { get; set; } = false;
 
@@ -492,14 +666,17 @@ namespace FlexMusicBox
             {
                 _sap = value;
                 VkAudios = null;
-                Task.Run(() =>
+                if (value != null)
                 {
-                    VkAudios = new ObservableCollection<Music>(value._Get(0, MaxDispQuantity));
-                    _skip = 0;
-                    _MaxSkip = value.Count - MaxDispQuantity;
+                    Task.Run(() =>
+                    {
+                        VkAudios = new ObservableCollection<Music>(value._Get(0, MaxDispQuantity));
+                        _skip = 0;
+                        _MaxSkip = value.Count - MaxDispQuantity;
 
-                    ShowPlayedMusic();
-                });
+                        ShowPlayedMusic();
+                    });
+                }
             }
         }
         public double AudiosListHeight { get; set; }
@@ -596,7 +773,7 @@ namespace FlexMusicBox
         {
             if (pl != null)
             {
-                this.Id = pl.Id.Value;
+                this.Id = pl.Id.Value.ToString();
                 this.Count = Convert.ToInt32(pl.Count);
                 this.Photo = pl.Photo.Photo600;
                 this.Title = pl.Title;
@@ -604,20 +781,22 @@ namespace FlexMusicBox
                 var audios = VM._vk.Audio.Get(new AudioGetParams
                 {
                     OwnerId = VM._vk.UserId,
-                    PlaylistId = this.Id,
+                    PlaylistId = Convert.ToInt64(this.Id),
                     Count = 6000
                 });
-                Musics = audios.Select(a => new Music(a, this.Id, audios.IndexOf(a))).ToList();
+                Musics = audios.Select(a => new VkMusic(a, this.Id, audios.IndexOf(a)) as Music).ToList();
                 while (Musics.Count() < Count)
                 {
                     audios = VM._vk.Audio.Get(new AudioGetParams
                     {
                         OwnerId = VM._vk.UserId,
-                        PlaylistId = this.Id,
+                        PlaylistId = Convert.ToInt64(this.Id),
                         Count = 6000
                     });
-                    Musics = audios.Select(a => new Music(a, this.Id, audios.IndexOf(a))).ToList();
+                    Musics = audios.Select(a => new VkMusic(a, this.Id, audios.IndexOf(a)) as Music).ToList();
                 }
+
+                VkPlaylists.Add(this);
             }
             else
             {
@@ -626,32 +805,43 @@ namespace FlexMusicBox
                 var audios = VM._vk.Audio.Get(new AudioGetParams
                 {
                     OwnerId = VM._vk.UserId,
-                    PlaylistId = this.Id,
+                    PlaylistId = Convert.ToInt64(this.Id),
                     Count = 6000
                 });
-                Musics = audios.Select(a => new Music(a, this.Id, audios.IndexOf(a))).ToList();
+                Musics = audios.Select(a => new VkMusic(a, this.Id, audios.IndexOf(a)) as Music).ToList();
                 int count = Musics.Count();
                 while (count == 6000)
                 {
                     audios = VM._vk.Audio.Get(new AudioGetParams
                     {
                         OwnerId = VM._vk.UserId,
-                        PlaylistId = this.Id,
+                        PlaylistId = Convert.ToInt64(this.Id),
                         Count = 6000
                     });
-                    Musics = audios.Select(a => new Music(a, this.Id, audios.IndexOf(a))).ToList();
+                    Musics = audios.Select(a => new VkMusic(a, this.Id, audios.IndexOf(a)) as Music).ToList();
                     count = audios.Count();
                 }
 
                 Count = Musics.Count();
             }
-            AllPlaylists.Add(this);
+        }
+        public Playlist(YPlaylist pl)
+        {
+            this.Id = pl.Kind;
+            this.Count = pl.TrackCount;
+            this.Photo = (pl.CoverWithoutText as YCoverPic).p400;
+            this.Title = pl.Title;
+
+            Musics = pl.Tracks.Select(p => (new YaMusic(p.Track, pl.Owner.Name, pl.Kind)) as Music).ToList();
+
+            YaPlaylists.Add(this);
         }
 
-        public static readonly List<Playlist> AllPlaylists = new List<Playlist>();
+        public static readonly List<Playlist> VkPlaylists = new List<Playlist>();
+        public static readonly List<Playlist> YaPlaylists = new List<Playlist>();
 
         public int Count { get; private set; }
-        public long? Id { get; private set; }
+        public string Id { get; private set; }
         public string Photo { get; private set; }
         public string Title { get; private set; }
 
@@ -676,57 +866,38 @@ namespace FlexMusicBox
         }
     }
 
-    public class Music
+    public abstract class Music
     {
-        public Music(Audio a, long? PlaylistId, int MusicIndex)
-        {
-            this.Artist = a.Artist;
-            this.Title = a.Title;
-
-            this.Duration = TimeSpan.FromSeconds(a.Duration);
-
-            this.PlaylistId = PlaylistId;
-            this.MusicIndex = MusicIndex;
-        }
-
         public string Name { get => $"{this.Artist} - {this.Title}"; }
+        public string Artist { get; protected set; }
+        public string Title { get; protected set; }
+        public string Duration { get; protected set; }
 
-        public string Artist;
-        public string Title;
-        public TimeSpan Duration;
+        protected abstract Playlist _GetCurrentPlaylist();
+        protected abstract void _SavePlayerPosition();
+        protected abstract string _GetUri();
 
-        long? PlaylistId;
-        int MusicIndex;
+        protected abstract SourceType Source { get; }
 
-        public Uri _GetUri()
+        public Task Play(int mseek = -1)
         {
-            return VM._vk.Audio.Get(new AudioGetParams
+            return Task.Run(() =>
             {
-                OwnerId = VM._vk.UserId,
-                PlaylistId = this.PlaylistId,
-                Offset = this.MusicIndex,
-                Count = 1
-            }).First().Url;
-        }
+                CurrentPlayingMusic = this;
+                CurrentPlayingPlaylist = _GetCurrentPlaylist();
 
-        public void Play()
-        {
-            CurrentPlayingMusic = this;
-            CurrentPlayingPlaylist = Playlist.AllPlaylists.
-                    Where(p => p.Id == this.PlaylistId).First();
+                Shuffle(VM._ShuffleMode);
 
-            Shuffle(VM._ShuffleMode);
+                VM.Current.ShowPlayedMusic();
 
-            VM.Current.ShowPlayedMusic();
+                VM.Current.CurrentSource = Source;
+                DM.SourceType = Source;
 
-            VM._MP.PlayNew(this);
+                VM._MP.PlayNew(this._GetUri(), mseek);
+                VM.Current.ShiftMS = 0;
 
-            DM.VkPlayerPosition = new VkPlayerPosition
-            {
-                PlaylistId = CurrentPlayingMusic.PlaylistId,
-                MusicIndex = CurrentPlayingMusic.MusicIndex,
-                Shuffle = VM._ShuffleMode
-            };
+                CurrentPlayingMusic._SavePlayerPosition();
+            });
         }
         public void PlayNext(bool auto = false)
         {
@@ -745,14 +916,10 @@ namespace FlexMusicBox
 
             if (auto)
             {
-                VM._MP.PlayNew(CurrentPlayingMusic);
+                VM._MP.PlayNew(CurrentPlayingMusic._GetUri());
+                VM.Current.ShiftMS = 0;
                 VM.Current.ShowPlayedMusic();
-                DM.VkPlayerPosition = new VkPlayerPosition
-                {
-                    PlaylistId = CurrentPlayingMusic.PlaylistId,
-                    MusicIndex = CurrentPlayingMusic.MusicIndex,
-                    Shuffle = VM._ShuffleMode
-                };
+                CurrentPlayingMusic._SavePlayerPosition();
             }
             else PlayNewFile();
         }
@@ -783,14 +950,10 @@ namespace FlexMusicBox
             counter -= 1;
             if (counter == 0)
             {
-                VM._MP.PlayNew(CurrentPlayingMusic);
+                VM._MP.PlayNew(CurrentPlayingMusic._GetUri());
+                VM.Current.ShiftMS = 0;
                 VM.Current.ShowPlayedMusic();
-                DM.VkPlayerPosition = new VkPlayerPosition
-                {
-                    PlaylistId = CurrentPlayingMusic.PlaylistId,
-                    MusicIndex = CurrentPlayingMusic.MusicIndex,
-                    Shuffle = VM._ShuffleMode
-                };
+                CurrentPlayingMusic._SavePlayerPosition();
             }
         }
 
@@ -830,17 +993,120 @@ namespace FlexMusicBox
                 : CurrentPlayingCollection[CurrentPlayingCollection.IndexOf(CurrentPlayingMusic) + 1]
             };
 
-            DM.VkPlayerPosition = new VkPlayerPosition
-            {
-                PlaylistId = CurrentPlayingMusic.PlaylistId,
-                MusicIndex = CurrentPlayingMusic.MusicIndex,
-                Shuffle = VM._ShuffleMode
-            };
+            CurrentPlayingMusic._SavePlayerPosition();
         }
 
         public static Music CurrentPlayingMusic { get; private set; }
         public static Playlist CurrentPlayingPlaylist { get; private set; }
         private static List<Music> CurrentPlayingCollection = new List<Music>();
+    }
+    public class VkMusic : Music
+    {
+        public VkMusic(Audio a, string PlaylistId, int MusicIndex)
+        {
+            this.Artist = a.Artist;
+            this.Title = a.Title;
+
+            this.Duration = TimeSpan.FromSeconds(a.Duration).ToString("m\\:ss");
+
+            this.PlaylistId = PlaylistId;
+            this.MusicIndex = MusicIndex;
+        }
+
+        string PlaylistId;
+        int MusicIndex;
+
+        protected override SourceType Source => SourceType.Vkontakte;
+        protected override string _GetUri()
+        {
+            return VM._vk.Audio.Get(new AudioGetParams
+            {
+                OwnerId = VM._vk.UserId,
+                PlaylistId = Convert.ToInt64(this.PlaylistId),
+                Offset = this.MusicIndex,
+                Count = 1
+            }).First().Url.AbsoluteUri;
+        }
+        protected override Playlist _GetCurrentPlaylist() 
+        {
+            return Playlist.VkPlaylists.
+                    Where(p => p.Id == this.PlaylistId).First();
+        }
+        protected override void _SavePlayerPosition()
+        {
+            long? pid = null;
+            if (this.PlaylistId != null)
+                pid = Convert.ToInt64(this.PlaylistId);
+
+            DM.VkPlayerPosition = new VkPlayerPosition
+            {
+                PlaylistId = pid,
+                MusicIndex = this.MusicIndex,
+                Shuffle = VM._ShuffleMode
+            };
+        }
+    }
+    public class YaMusic : Music
+    {
+        public YaMusic(YTrack tr, string OwnerName, string Kind)
+        {
+            //Atrists
+            for (int i = 0; i < tr.Artists.Count; i++)
+            {
+                if (i != 0) this.Artist += ", ";
+                this.Artist += tr.Artists[i].Name;
+                if (tr.Artists[i].Decomposed != null)
+                {
+                    for (int j = 0; j < tr.Artists[i].Decomposed.Count; j++)
+                    {
+                        if (tr.Artists[i].Decomposed[j] is string)
+                        {
+                            this.Artist += (string)(tr.Artists[i].Decomposed[j]);
+                        }
+                        if (tr.Artists[i].Decomposed[j] is JObject)
+                        {
+                            this.Artist += ((JObject)(tr.Artists[i].Decomposed[j]))["name"].Value<string>();
+                        }
+                    }
+                }
+            }
+            //Title
+            this.Title = tr.Title;
+            if (!String.IsNullOrEmpty(tr.Version)) Title += $" ({tr.Version})";
+
+            this.Duration = TimeSpan.FromMilliseconds(tr.DurationMs).ToString("m\\:ss");
+
+            this.OwnerName = OwnerName;
+            this.Kind = Kind;
+            this.Id = tr.Id;
+            this.trackKey = tr.GetKey().ToString();
+        }
+
+        string OwnerName;
+        string Kind;
+
+        public string Id { get; private set; }
+        string trackKey;
+
+        protected override SourceType Source => SourceType.Yandex;
+        protected override string _GetUri() =>
+            MainPageViewModel._Ya.Track.GetFileLink(MainPageViewModel._Yas, trackKey);
+
+        protected override Playlist _GetCurrentPlaylist()
+        {
+            return Playlist.YaPlaylists.
+                    Where(p => p.Id == this.Kind).First();
+        }
+        protected override void _SavePlayerPosition()
+        {
+            DM.YaPlayerPosition = new YaPlayerPosition
+            {
+                OwnerName = this.OwnerName,
+                Kind = this.Kind,
+                Id = this.Id,
+                Shuffle = VM._ShuffleMode
+            };
+        }
     }
 
     public enum SourceType
