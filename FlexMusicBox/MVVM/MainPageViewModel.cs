@@ -795,8 +795,6 @@ namespace FlexMusicBox
                     });
                     Musics = audios.Select(a => new VkMusic(a, this.Id, audios.IndexOf(a)) as Music).ToList();
                 }
-
-                VkPlaylists.Add(this);
             }
             else
             {
@@ -824,6 +822,8 @@ namespace FlexMusicBox
 
                 Count = Musics.Count();
             }
+
+            VkPlaylists.Add(this);
         }
         public Playlist(YPlaylist pl)
         {
@@ -879,25 +879,22 @@ namespace FlexMusicBox
 
         protected abstract SourceType Source { get; }
 
-        public Task Play(int mseek = -1)
+        public void Play(int mseek = -1)
         {
-            return Task.Run(() =>
-            {
-                CurrentPlayingMusic = this;
-                CurrentPlayingPlaylist = _GetCurrentPlaylist();
+            CurrentPlayingMusic = this;
+            CurrentPlayingPlaylist = _GetCurrentPlaylist();
 
-                Shuffle(VM._ShuffleMode);
+            Shuffle(VM._ShuffleMode);
 
-                VM.Current.ShowPlayedMusic();
+            VM.Current.ShowPlayedMusic();
 
-                VM.Current.CurrentSource = Source;
-                DM.SourceType = Source;
+            VM.Current.CurrentSource = Source;
+            DM.SourceType = Source;
 
-                VM._MP.PlayNew(this._GetUri(), mseek);
-                VM.Current.ShiftMS = 0;
+            VM._MP.PlayNew(this._GetUri(), mseek);
+            VM.Current.ShiftMS = 0;
 
-                CurrentPlayingMusic._SavePlayerPosition();
-            });
+            CurrentPlayingMusic._SavePlayerPosition();
         }
         public void PlayNext(bool auto = false)
         {
